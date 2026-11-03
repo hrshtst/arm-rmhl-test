@@ -1,0 +1,43 @@
+# The joint PD alone, without feedback learned, over a grid of its natural
+# frequency and damping ratio: the yardstick for the feedback learned.
+
+# arm-esn-ctrl's v2 arm: two links in the horizontal plane, without gravity.
+[initial]
+q = [30.0, 30.0]  # deg
+
+[skeleton]
+base_length = 0.0
+
+[[skeleton.link]]
+length = 0.5
+mass = 0.5
+inertia = 0.0125
+com = [0.25, 0.0]
+limits = [-180.0, 180.0]
+
+[[skeleton.link]]
+length = 0.4
+mass = 0.4
+inertia = 0.0064
+com = [0.2, 0.0]
+limits = [-180.0, 180.0]
+
+[simulator]
+dt = 0.002
+stops = "locked"
+
+# One reach from rest: the hand to (-0.6, 0.4) m by a minimum-jerk move of 1 s, then 1 s of holding.
+[reach]
+target = [-0.6, 0.4]
+move = 1.0
+duration = 2.0
+control_period = 0.01
+
+# The weak PD of the other configurations, which the sweep replaces.
+[command]
+omega = 5.0  # rad/s
+damping_ratio = 0.7
+
+[sweep]
+"command.omega" = [2.0, 3.0, 5.0, 7.0, 10.0, 14.0, 20.0, 28.0, 40.0, 56.0, 80.0, 112.0, 160.0]
+"command.damping_ratio" = [0.1, 0.2, 0.4, 0.7, 1.0, 1.4]

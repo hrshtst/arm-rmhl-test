@@ -109,7 +109,8 @@ arm-rmhl-test/
 
 Each experiment is a directory under [`experiments/`](experiments/README.md),
 with a README that describes it and its configuration files; the runner scripts
-that run them are shared. None has been added yet.
+that run them are shared. The first is
+[`feedback_from_scratch`](experiments/feedback_from_scratch/README.md), for RQ1.
 
 Every parameter that affects a result is in a TOML configuration file, and every
 run records its configuration, the command, and the commit that produced it, so

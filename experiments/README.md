@@ -7,8 +7,18 @@ experiments and live directly in this directory.
 
 | Experiment | What it studies | Runners | Report |
 | --- | --- | --- | --- |
+| [`feedback_from_scratch`](feedback_from_scratch/README.md) | RQ1: feedback torques learned from zero for one reach under a weak PD, against the PD alone over a grid of gains | `pd_grid.py`, `learn_feedback.py` | not yet |
 
-None yet.
+The runners:
+
+- `pd_grid.py` tracks the reach with the joint PD alone, for every combination of
+  a sweep of its gains;
+- `learn_feedback.py` learns feedback torques from one reward per reach, for every
+  combination of a sweep, over `--workers` processes.
+
+A `[sweep]` table lists values for settings of a configuration by their dotted
+paths, such as `"rule.learning_rate" = [1.0, 3.0]`; every combination of the
+values is run (see `arm_rmhl_test.sweeps`).
 
 Run a configuration with its runner:
 
