@@ -41,8 +41,11 @@ skelarm raised.
 2. **Tuning.** For each rule and variant, the learning rate and the exploration
    amplitude are tuned by hand on seed 0, in rounds of `tune_<rule>*.toml` of
    1,000 trials each.
-3. **The final runs.** The tuned settings of each rule and variant run on seeds 1
-   to 5, which the tuning never saw, all with the same trial budget.
+3. **The final runs.** Each rule and variant's tuned setting is the one with the
+   lowest noise-free error at 1,000 trials on seed 0, over all its tuning rounds.
+   It runs on seeds 1 to 5, which the tuning never saw, for 3,000 trials: the error
+   at 1,000 trials compares at the tuning's budget, and the rest shows the trend.
+   The tuning stopped when larger exploration amplitudes no longer paid off.
 
 ## Configurations
 
@@ -59,6 +62,10 @@ skelarm raised.
 | `tune_decorrelated_round3.toml` | `learn_feedback.py` | tuning round 3 of the decorrelated rule with raw torque: amplitudes 0.8 to 3.2 N m by 4 learning rates (2.5 to 20) |
 | `tune_plain_inertia_round2.toml` | `learn_feedback.py` | tuning round 2 of the plain rule with inertia-scaled feedback: amplitudes 2 to 8 rad/s^2 by 4 learning rates (0.04 to 0.3) |
 | `tune_decorrelated_inertia_round2.toml` | `learn_feedback.py` | tuning round 2 of the decorrelated rule with inertia-scaled feedback: amplitudes 4 to 16 rad/s^2 by 4 learning rates (12 to 100) |
+| `final_plain_raw.toml` | `learn_feedback.py` | the final runs of the plain rule with raw torque: 0.8 N m, learning rate 0.25 |
+| `final_decorrelated_raw.toml` | `learn_feedback.py` | the final runs of the decorrelated rule with raw torque: 3.2 N m, learning rate 2.5 |
+| `final_plain_inertia.toml` | `learn_feedback.py` | the final runs of the plain rule with inertia-scaled feedback: 4 rad/s^2, learning rate 0.15 |
+| `final_decorrelated_inertia.toml` | `learn_feedback.py` | the final runs of the decorrelated rule with inertia-scaled feedback: 8 rad/s^2, learning rate 50 |
 
 ```bash
 uv run python experiments/pd_grid.py experiments/feedback_from_scratch/pd_grid.toml
@@ -79,6 +86,10 @@ Under `results/feedback_from_scratch/` in the storage root:
 | `20261103-223958-tune_decorrelated_round2` | Raw torque. 11 of 15 improve. The closest is 0.8 N m with a learning rate of 20: 19.5 mm. Where the learning rate times the amplitude reaches 16 to 32, the gains run away. |
 | `20261103-223958-tune_plain_inertia` | Inertia-scaled. 6 of 24 improve. The closest is 2 rad/s^2 with a learning rate of 0.3: 46.4 mm. The run-aways are single updates that throw the damping from about 10 to tens of thousands per second. |
 | `20261103-223958-tune_decorrelated_inertia` | Inertia-scaled. 15 of 24 improve. The closest is 4 rad/s^2 with a learning rate of 100: 19.1 mm. |
+| `20261103-231146-tune_plain_round3` | Raw torque. 5 of 12 improve, none closer than round 2's 27.8 mm. Beyond 0.8 N m, only 1.6 N m with a learning rate of 0.03 holds: 36.4 mm. |
+| `20261103-231146-tune_decorrelated_round3` | Raw torque. 8 of 12 improve. The closest is 3.2 N m with a learning rate of 2.5: 18.0 mm, against 19.5 mm at 0.8 N m. |
+| `20261103-231146-tune_plain_inertia_round2` | Inertia-scaled. 9 of 12 improve. The closest is 4 rad/s^2 with a learning rate of 0.15: 33.2 mm. At 8 rad/s^2, one setting reaches 21.3 mm at 720 trials, then runs away. |
+| `20261103-231146-tune_decorrelated_inertia_round2` | Inertia-scaled. 8 of 12 improve. The closest is 8 rad/s^2 with a learning rate of 50: 16.5 mm. |
 
 Each training took 6 to 13 minutes with 30 running at once on the
 workstation, about 0.6 s per trial. Every closest setting so far is still

@@ -48,3 +48,30 @@ def test_both_rules_are_tuned_with_the_same_budget():
 
     assert rules == {False, 1.0}
     assert len(budgets) == 1
+
+
+FINAL = [path for path in CONFIGS if path.stem.startswith("final_")]
+
+
+def without_seed(config: dict[str, Any]) -> dict[str, Any]:
+    """The configuration's feedback and rule, without the exploration's seed."""
+    rule = config["rule"] | {"exploration": config["rule"]["exploration"] | {"seed": None}}
+    return {"feedback": config.get("feedback"), "rule": rule}
+
+
+@pytest.mark.parametrize("path", FINAL, ids=lambda path: path.stem)
+def test_the_final_runs_take_a_tuned_setting_to_the_unseen_seeds(path: Path):
+    config = load(path)
+    tuned = [without_seed(variant) for tuning in TUNING for _, variant in expand(load(tuning))]
+
+    assert config["sweep"] == {"rule.exploration.seed": [1, 2, 3, 4, 5]}
+    assert without_seed(config) in tuned
+
+
+def test_the_final_runs_share_one_budget_beyond_the_tunings():
+    budgets = {tuple(load(path)["training"].items()) for path in FINAL}
+    tuning_trials = {load(path)["training"]["trials"] for path in TUNING}
+
+    assert len(FINAL) == 4
+    assert len(budgets) == 1
+    assert dict(budgets.pop())["trials"] >= max(tuning_trials)
