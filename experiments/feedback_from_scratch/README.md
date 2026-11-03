@@ -53,4 +53,13 @@ uv run python experiments/learn_feedback.py experiments/feedback_from_scratch/tu
 
 ## Runs
 
-None yet.
+Under `results/feedback_from_scratch/` in the storage root:
+
+| Run | Result |
+| --- | --- |
+| `20261103-210822-pd_grid` | The closest PD is 80 rad/s with a damping ratio of 0.2: 0.8 mm. Its neighbors at a damping ratio of 0.1 or 0.4, and every PD of 112 rad/s or more, run away under the 10-ms hold. |
+| `20261103-210821-tune_plain` | 8 of 15 settings improve on the PD alone, still falling at 1,000 trials. The closest is an amplitude of 0.2 N m with a learning rate of 1: 46.7 mm. The other 7 run away within 20 trials, to about 700 mm, raising nothing. |
+| `20261103-210821-tune_decorrelated` | 8 of 15 settings improve, still falling at 1,000 trials. The closest is an amplitude of 0.2 N m with a learning rate of 30: 68.1 mm. Of the 7 that run away, 3 do so late, after 100 to 560 trials of improving. |
+
+Each training took 10 to 11 minutes with 30 running at once on the
+workstation, about 0.6 s per trial.
