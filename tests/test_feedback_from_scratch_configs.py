@@ -75,3 +75,16 @@ def test_the_final_runs_share_one_budget_beyond_the_tunings():
     assert len(FINAL) == 4
     assert len(budgets) == 1
     assert dict(budgets.pop())["trials"] >= max(tuning_trials)
+
+
+LONG = [path for path in CONFIGS if path.stem.startswith("long_")]
+
+
+@pytest.mark.parametrize("path", LONG, ids=lambda path: path.stem)
+def test_a_longer_budget_changes_only_the_trials_of_a_final_run(path: Path):
+    config = load(path)
+    final = load(EXPERIMENT / f"{path.stem.replace('long_', 'final_', 1)}.toml")
+
+    assert config["training"]["trials"] > final["training"]["trials"]
+    config["training"]["trials"] = final["training"]["trials"]
+    assert config == final

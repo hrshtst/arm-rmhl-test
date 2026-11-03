@@ -46,6 +46,9 @@ skelarm raised.
    It runs on seeds 1 to 5, which the tuning never saw, for 3,000 trials: the error
    at 1,000 trials compares at the tuning's budget, and the rest shows the trend.
    The tuning stopped when larger exploration amplitudes no longer paid off.
+4. **A longer budget.** The decorrelated rule was still improving at 3,000
+   trials, so its two final runs go on to 10,000 trials, with the same settings
+   and seeds, from zero weights.
 
 ## Configurations
 
@@ -67,6 +70,8 @@ skelarm raised.
 | `final_plain_inertia.toml` | `learn_feedback.py` | the final runs of the plain rule with inertia-scaled feedback: 4 rad/s^2, learning rate 0.15 |
 | `final_decorrelated_inertia.toml` | `learn_feedback.py` | the final runs of the decorrelated rule with inertia-scaled feedback: 8 rad/s^2, learning rate 50 |
 | `compare_final.toml` | `compare_learning.py` | the four final runs against the PD alone and PDs of the grid |
+| `long_decorrelated_raw.toml` | `learn_feedback.py` | a longer budget for the decorrelated rule with raw torque: the final runs' setting and seeds, for 10,000 trials |
+| `long_decorrelated_inertia.toml` | `learn_feedback.py` | a longer budget for the decorrelated rule with inertia-scaled feedback, likewise |
 
 ```bash
 uv run python experiments/pd_grid.py experiments/feedback_from_scratch/pd_grid.toml
