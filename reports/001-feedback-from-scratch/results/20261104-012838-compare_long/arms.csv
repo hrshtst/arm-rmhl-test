@@ -1,0 +1,3 @@
+arm,trainings,improved,worse,diverged,median_final_error_m,min_final_error_m,max_final_error_m,median_best_error_m
+"decorrelated, raw torque",5,5,0,0,0.005580518865642722,0.005323048196154178,0.005695564925639469,0.005551275284777494
+"decorrelated, inertia-scaled",5,5,0,0,0.003841494867332051,0.0036432112351015866,0.004210418758696193,0.003830594330559354

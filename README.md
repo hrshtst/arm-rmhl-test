@@ -13,8 +13,8 @@ with [skelarm](https://github.com/hrshtst/skelarm).
 
 > **Status:** report [001](reports/001-feedback-from-scratch/README.md) answers
 > RQ1 for one reach: the decorrelated rule learns feedback from scratch on every
-> seed, to 6 to 9 mm against the weak PD's 170 mm; the plain rule's gains run
-> away on half of its seeds.
+> seed, to 6 to 9 mm against the weak PD's 170 mm, and to 4 to 6 mm in 10,000
+> reaches; the plain rule's gains run away on half of its seeds.
 
 ## Motivation
 
@@ -201,7 +201,7 @@ Each report has five parts:
 
 | Report | Question | Answer, in short |
 | --- | --- | --- |
-| [001 Feedback from scratch](reports/001-feedback-from-scratch/README.md) | RQ1: can RMHL learn feedback for a weak PD from one reward per reach? | Yes with the decorrelated rule, to 6 to 9 mm in 3,000 reaches on every seed; the plain rule's gains run away on half of its seeds. |
+| [001 Feedback from scratch](reports/001-feedback-from-scratch/README.md) | RQ1: can RMHL learn feedback for a weak PD from one reward per reach? | Yes with the decorrelated rule, to 6 to 9 mm in 3,000 reaches and 4 to 6 mm in 10,000 on every seed, inertia-scaled with a chattering torque; the plain rule's gains run away on half of its seeds. |
 
 ## Dependencies
 

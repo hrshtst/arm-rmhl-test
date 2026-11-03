@@ -90,7 +90,6 @@ them.
 | `20261103-210822-pd_grid` | The closest PD is 80 rad/s with a damping ratio of 0.2: 0.8 mm. Its neighbors at a damping ratio of 0.1 or 0.4, and every PD of 112 rad/s or more, run away under the 10-ms hold. |
 | `20261103-210821-tune_plain` | 8 of 15 settings improve on the PD alone, still falling at 1,000 trials. The closest is an amplitude of 0.2 N m with a learning rate of 1: 46.7 mm. The other 7 run away within 20 trials, to about 700 mm, raising nothing. |
 | `20261103-210821-tune_decorrelated` | 8 of 15 settings improve, still falling at 1,000 trials. The closest is an amplitude of 0.2 N m with a learning rate of 30: 68.1 mm. Of the 7 that run away, 3 do so late, after 100 to 560 trials of improving. |
-
 | `20261103-223958-tune_plain_round2` | Raw torque. 9 of 15 improve. The closest is 0.8 N m with a learning rate of 0.25: 27.8 mm. Where the learning rate times the amplitude reaches 0.4, the gains run away. |
 | `20261103-223958-tune_decorrelated_round2` | Raw torque. 11 of 15 improve. The closest is 0.8 N m with a learning rate of 20: 19.5 mm. Where the learning rate times the amplitude reaches 16 to 32, the gains run away. |
 | `20261103-223958-tune_plain_inertia` | Inertia-scaled. 6 of 24 improve. The closest is 2 rad/s^2 with a learning rate of 0.3: 46.4 mm. Its run-aways are abrupt: in one, joint 1's damping over its inertia went from about 20 to about 80,000 per second within 20 reaches. |
@@ -103,10 +102,14 @@ them.
 | `20261103-233157-final_decorrelated_raw` | 5 of 5 improve, to 9.0 to 9.2 mm at 3,000 trials, still falling. |
 | `20261103-233157-final_plain_inertia` | 2 of 5 improve, to 21.5 and 23.1 mm. Seeds 3, 4, and 5 run away after 680 to 2,220 trials. |
 | `20261103-233157-final_decorrelated_inertia` | 5 of 5 improve, to 6.2 to 6.3 mm at 3,000 trials, and seed 2 to 13.9 mm, still falling. |
-| `20261104-000556-compare_final` | The four final runs against the PDs; report 001's figure. |
+| `20261104-002706-long_decorrelated_raw` | 5 of 5 improve, to 5.3 to 5.7 mm at 10,000 trials, still falling. The first 3,000 trials repeat `final_decorrelated_raw` exactly. |
+| `20261104-002706-long_decorrelated_inertia` | 5 of 5 improve, to 3.6 to 4.2 mm at 10,000 trials, still falling, with a torque that chatters over the first 0.4 s of the reach. The first 3,000 trials repeat `final_decorrelated_inertia` exactly. |
+| `20261104-012838-compare_final` | The four final runs against the PDs; a figure of report 001. |
+| `20261104-012838-compare_long` | The two runs of a longer budget against the PDs; a figure of report 001. |
 
 A tuning training of 1,000 trials took 6 to 13 minutes with 30 running at once
-on the workstation, about 0.6 s per trial. Every closest setting so far is still
-improving at 1,000 trials. The exploring reaches track only slightly worse
-than the noise-free ones: over the last 100 trials of the closest decorrelated
+on the workstation, about 0.6 s per trial; one of 10,000 trials took 47 to 58
+minutes with 10 at once. Every closest setting so far is still improving at
+1,000 trials. The exploring reaches track only slightly worse than the
+noise-free ones: over the last 100 trials of the closest decorrelated
 setting with raw torque, 21.3 mm on average, against 19.5 mm at the end.

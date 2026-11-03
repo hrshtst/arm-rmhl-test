@@ -17,11 +17,17 @@ and ``grid.csv``), it prints, as Markdown:
   over the seeds of each joint's natural frequency and damping ratio, the PD's and
   the feedback's together, and the size of the cross-joint gains (Section 3.4);
 - the effort: the final feedback of each seed that improved, replayed without
-  noise, against the PDs: the squared torque integrated over the reach and the
-  peak torque (Section 3.4);
-- the PDs that the results are compared with (Section 3.1).
+  noise, against the PDs, replayed likewise: the squared torque integrated over
+  the reach, the peak torque, and the torque's variation, how much it changes
+  from one control period to the next, summed over the reach and the joints
+  (Section 3.4);
+- the PDs that the results are compared with (Section 3.1);
+- the longer budget: the decorrelated rule's runs of 10,000 trials, each seed's
+  noise-free error at 1,000 to 10,000 trials, and their learned gains and effort
+  as above, against the PDs they approach (Section 3.5).
 
-The replay checks that it reproduces each final run's last noise-free error.
+The replays check that they reproduce each run's last noise-free error and each
+PD's tracking error in the grid.
 """
 
 from __future__ import annotations
@@ -34,12 +40,14 @@ from typing import Any
 
 import numpy as np
 
-from arm_rmhl_test.arm import command_gains, effort, make_arm, make_reach
+from arm_rmhl_test.arm import ReachRun, command_gains, effort, make_arm, make_reach, pd_gains, run_reach, tracking_error
 from arm_rmhl_test.feedback import feedback_scale, make_model, make_rule, run_trial, split_weights
 
 HERE = Path(__file__).resolve().parent
 CHECKPOINTS = (1000, 3000)  # trials learned from, in the final runs
+LONG_CHECKPOINTS = (1000, 3000, 5000, 10000)  # and in the runs of a longer budget
 MARKED_PDS = ((10.0, 0.7), (20.0, 0.7), (28.0, 0.7))
+LONG_PDS = ((28.0, 0.7), (40.0, 0.4))  # the PDs that the longer budget approaches
 
 
 def main() -> None:
@@ -57,8 +65,17 @@ def main() -> None:
     print_finals(finals)
     print("\n## Learned gains\n")
     print_gains(finals)
+    grid = next(run for run in runs if run.name.endswith("-pd_grid"))
     print("\n## Effort\n")
-    print_effort(finals, next(run for run in runs if run.name.endswith("-pd_grid")))
+    print_effort(finals, grid)
+    longs = [run for run in runs if "-long_" in run.name]
+    if longs:
+        print("\n## A longer budget\n")
+        print_finals(longs, LONG_CHECKPOINTS)
+        print("\n## A longer budget: learned gains\n")
+        print_gains(longs)
+        print("\n## A longer budget: effort\n")
+        print_effort(longs, grid, LONG_PDS)
 
 
 def load_config(run: Path) -> dict[str, Any]:
@@ -113,7 +130,7 @@ def print_tuning(runs: list[Path]) -> None:
         )
 
 
-def print_finals(runs: list[Path]) -> None:
+def print_finals(runs: list[Path], checkpoints: tuple[int, ...] = CHECKPOINTS) -> None:
     seeds = [int(row["rule.exploration.seed"]) for row in load_rows(runs[0], "runs.csv")]
     columns = " | ".join(f"seed {seed}" for seed in seeds)
     print(f"| Rule, feedback | Trials | {columns} | Median |")
@@ -122,7 +139,7 @@ def print_finals(runs: list[Path]) -> None:
         config = load_config(run)
         with np.load(run / "training.npz") as data:
             evaluated_at, evaluations = data["evaluated_at"], data["evaluations"]
-        for checkpoint in CHECKPOINTS:
+        for checkpoint in checkpoints:
             column = int(np.flatnonzero(evaluated_at == checkpoint)[0])
             errors = evaluations[:, column]
             # A training that diverged before the checkpoint is infinitely far from the reference.
@@ -165,19 +182,29 @@ def print_gains(runs: list[Path]) -> None:
         )
 
 
-def print_effort(runs: list[Path], grid_run: Path) -> None:
-    """The effort and the peak torque of each final feedback that improved, replayed without noise, and of the PDs."""
-    print("| Controller | Tracking error | Effort (N^2 m^2 s) | Peak torque (N m) |")
-    print("| --- | ---: | ---: | ---: |")
+def print_effort(runs: list[Path], grid_run: Path, pds: tuple[tuple[float, float], ...] = MARKED_PDS) -> None:
+    """The effort, peak torque, and torque variation of each final feedback that improved and of the PDs.
+
+    The feedback is replayed without noise, and so are the weak PD and the given PDs of the grid.
+    """
+    print("| Controller | Tracking error | Effort (N^2 m^2 s) | Peak torque (N m) | Torque variation (N m) |")
+    print("| --- | ---: | ---: | ---: | ---: |")
+    grid_config = load_config(grid_run)
     grid = {
-        (float(row["command.omega"]), float(row["command.damping_ratio"])): row
+        (float(row["command.omega"]), float(row["command.damping_ratio"])): float(row["tracking_error_m"])
         for row in load_rows(grid_run, "grid.csv")
     }
-    for marked in ((5.0, 0.7), *MARKED_PDS):
-        row = grid[marked]
+    for omega, ratio in ((5.0, 0.7), *pds):
+        arm = make_arm(grid_config)
+        reach = make_reach(grid_config, arm)
+        reached = run_reach(arm, reach, *pd_gains(arm, omega, ratio))
+        error = tracking_error(reached, reach)
+        if error != grid[omega, ratio]:
+            msg = f"the replay of the PD of {omega:g} rad/s and {ratio:g} gives {error}, not {grid[omega, ratio]}"
+            raise RuntimeError(msg)
         print(
-            f"| PD, {marked[0]:g} rad/s, {marked[1]:g} | {1000 * float(row['tracking_error_m']):.1f} mm"
-            f" | {float(row['effort']):.2f} | {float(row['peak_torque_nm']):.2f} |"
+            f"| PD, {omega:g} rad/s, {ratio:g} | {1000 * error:.1f} mm | {effort(reached, reach):.2f}"
+            f" | {float(np.abs(reached.tau).max()):.2f} | {variation(reached):.1f} |"
         )
     for run in runs:
         config = load_config(run)
@@ -188,7 +215,7 @@ def print_effort(runs: list[Path], grid_run: Path) -> None:
         rows = load_rows(run, "runs.csv")
         with np.load(run / "training.npz") as data:
             weights, evaluations = data["weights"][:, -1], data["evaluations"][:, -1]
-        errors, efforts, peaks = [], [], []
+        errors, efforts, peaks, variations = [], [], [], []
         for row, final, expected in zip(rows, weights, evaluations, strict=True):
             if row["outcome"] != "improved":
                 continue
@@ -201,10 +228,16 @@ def print_effort(runs: list[Path], grid_run: Path) -> None:
             errors.append(error)
             efforts.append(effort(reached, reach))
             peaks.append(float(np.abs(reached.tau).max()))
+            variations.append(variation(reached))
         print(
             f"| {arm_name(config)}, median of {len(errors)} improved | {1000 * float(np.median(errors)):.1f} mm"
-            f" | {np.median(efforts):.2f} | {np.median(peaks):.2f} |"
+            f" | {np.median(efforts):.2f} | {np.median(peaks):.2f} | {np.median(variations):.1f} |"
         )
+
+
+def variation(reached: ReachRun) -> float:
+    """How much the torque changes from one control period to the next, summed over the reach and the joints (N m)."""
+    return float(np.abs(np.diff(reached.tau, axis=0)).sum())
 
 
 def _values(values: list[float]) -> str:

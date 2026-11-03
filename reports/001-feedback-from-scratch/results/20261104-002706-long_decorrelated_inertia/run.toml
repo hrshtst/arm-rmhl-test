@@ -1,0 +1,6 @@
+config = "experiments/feedback_from_scratch/long_decorrelated_inertia.toml"
+command = "experiments/learn_feedback.py experiments/feedback_from_scratch/long_decorrelated_inertia.toml --workers 5"
+started = 2026-11-04 00:27:06+09:00
+host = "delbosque"
+commit = "4d6a35fc0ae08c0b802114fee87be04c1312308f"
+uncommitted_changes = false
