@@ -7,7 +7,7 @@ experiments and live directly in this directory.
 
 | Experiment | What it studies | Runners | Report |
 | --- | --- | --- | --- |
-| [`feedback_from_scratch`](feedback_from_scratch/README.md) | RQ1: feedback torques learned from zero for one reach under a weak PD, against the PD alone over a grid of gains | `pd_grid.py`, `learn_feedback.py`, `compare_learning.py` | not yet |
+| [`feedback_from_scratch`](feedback_from_scratch/README.md) | RQ1: feedback torques learned from zero for one reach under a weak PD, against the PD alone over a grid of gains | `pd_grid.py`, `learn_feedback.py`, `compare_learning.py` | [001](../reports/001-feedback-from-scratch/README.md) |
 
 The runners:
 

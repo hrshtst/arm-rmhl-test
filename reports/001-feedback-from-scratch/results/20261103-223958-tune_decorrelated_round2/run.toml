@@ -1,0 +1,6 @@
+config = "experiments/feedback_from_scratch/tune_decorrelated_round2.toml"
+command = "experiments/learn_feedback.py experiments/feedback_from_scratch/tune_decorrelated_round2.toml --workers 6"
+started = 2026-11-03 22:39:58+09:00
+host = "delbosque"
+commit = "8ef75fcca1d2c63cc361147ea5c05fe75c4bb524"
+uncommitted_changes = false

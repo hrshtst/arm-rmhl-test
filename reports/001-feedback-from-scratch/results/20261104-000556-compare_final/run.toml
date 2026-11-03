@@ -1,0 +1,6 @@
+config = "experiments/feedback_from_scratch/compare_final.toml"
+command = "experiments/compare_learning.py experiments/feedback_from_scratch/compare_final.toml"
+started = 2026-11-04 00:05:56+09:00
+host = "delbosque"
+commit = "7bbd0f97c44f1deacc312c2fe3d29eb89d7c60e7"
+uncommitted_changes = false

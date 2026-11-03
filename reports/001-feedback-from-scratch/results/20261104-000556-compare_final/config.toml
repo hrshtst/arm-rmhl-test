@@ -1,0 +1,21 @@
+# The final runs of each rule and variant, over seeds 1 to 5, against PDs of the grid.
+
+[[arm]]
+run = "results/feedback_from_scratch/20261103-233157-final_plain_raw"
+label = "plain, raw torque"
+
+[[arm]]
+run = "results/feedback_from_scratch/20261103-233157-final_decorrelated_raw"
+label = "decorrelated, raw torque"
+
+[[arm]]
+run = "results/feedback_from_scratch/20261103-233157-final_plain_inertia"
+label = "plain, inertia-scaled"
+
+[[arm]]
+run = "results/feedback_from_scratch/20261103-233157-final_decorrelated_inertia"
+label = "decorrelated, inertia-scaled"
+
+[pd]
+run = "results/feedback_from_scratch/20261103-210822-pd_grid"
+marks = [[10.0, 0.7], [20.0, 0.7], [28.0, 0.7]]  # rad/s and damping ratio

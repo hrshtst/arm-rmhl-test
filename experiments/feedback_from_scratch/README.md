@@ -75,7 +75,9 @@ uv run python experiments/learn_feedback.py experiments/feedback_from_scratch/<c
 
 ## Runs
 
-Under `results/feedback_from_scratch/` in the storage root:
+Under `results/feedback_from_scratch/` in the storage root, all current. Report
+[001](../../reports/001-feedback-from-scratch/README.md) copies them and reads
+them.
 
 | Run | Result |
 | --- | --- |
@@ -85,15 +87,20 @@ Under `results/feedback_from_scratch/` in the storage root:
 
 | `20261103-223958-tune_plain_round2` | Raw torque. 9 of 15 improve. The closest is 0.8 N m with a learning rate of 0.25: 27.8 mm. Where the learning rate times the amplitude reaches 0.4, the gains run away. |
 | `20261103-223958-tune_decorrelated_round2` | Raw torque. 11 of 15 improve. The closest is 0.8 N m with a learning rate of 20: 19.5 mm. Where the learning rate times the amplitude reaches 16 to 32, the gains run away. |
-| `20261103-223958-tune_plain_inertia` | Inertia-scaled. 6 of 24 improve. The closest is 2 rad/s^2 with a learning rate of 0.3: 46.4 mm. The run-aways are single updates that throw the damping from about 10 to tens of thousands per second. |
+| `20261103-223958-tune_plain_inertia` | Inertia-scaled. 6 of 24 improve. The closest is 2 rad/s^2 with a learning rate of 0.3: 46.4 mm. Its run-aways are abrupt: in one, joint 1's damping over its inertia went from about 20 to about 80,000 per second within 20 reaches. |
 | `20261103-223958-tune_decorrelated_inertia` | Inertia-scaled. 15 of 24 improve. The closest is 4 rad/s^2 with a learning rate of 100: 19.1 mm. |
 | `20261103-231146-tune_plain_round3` | Raw torque. 5 of 12 improve, none closer than round 2's 27.8 mm. Beyond 0.8 N m, only 1.6 N m with a learning rate of 0.03 holds: 36.4 mm. |
 | `20261103-231146-tune_decorrelated_round3` | Raw torque. 8 of 12 improve. The closest is 3.2 N m with a learning rate of 2.5: 18.0 mm, against 19.5 mm at 0.8 N m. |
 | `20261103-231146-tune_plain_inertia_round2` | Inertia-scaled. 9 of 12 improve. The closest is 4 rad/s^2 with a learning rate of 0.15: 33.2 mm. At 8 rad/s^2, one setting reaches 21.3 mm at 720 trials, then runs away. |
 | `20261103-231146-tune_decorrelated_inertia_round2` | Inertia-scaled. 8 of 12 improve. The closest is 8 rad/s^2 with a learning rate of 50: 16.5 mm. |
+| `20261103-233157-final_plain_raw` | 3 of 5 seeds improve, to 20.6 to 24.2 mm at 3,000 trials. Seeds 2 and 4 run away within 20 trials. |
+| `20261103-233157-final_decorrelated_raw` | 5 of 5 improve, to 9.0 to 9.2 mm at 3,000 trials, still falling. |
+| `20261103-233157-final_plain_inertia` | 2 of 5 improve, to 21.5 and 23.1 mm. Seeds 3, 4, and 5 run away after 680 to 2,220 trials. |
+| `20261103-233157-final_decorrelated_inertia` | 5 of 5 improve, to 6.2 to 6.3 mm at 3,000 trials, and seed 2 to 13.9 mm, still falling. |
+| `20261104-000556-compare_final` | The four final runs against the PDs; report 001's figure. |
 
-Each training took 6 to 13 minutes with 30 running at once on the
-workstation, about 0.6 s per trial. Every closest setting so far is still
+A tuning training of 1,000 trials took 6 to 13 minutes with 30 running at once
+on the workstation, about 0.6 s per trial. Every closest setting so far is still
 improving at 1,000 trials. The exploring reaches track only slightly worse
 than the noise-free ones: over the last 100 trials of the closest decorrelated
 setting with raw torque, 21.3 mm on average, against 19.5 mm at the end.

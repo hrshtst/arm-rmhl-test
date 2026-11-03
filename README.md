@@ -11,8 +11,10 @@ nothing to fit. This study explores what the RMHL of
 [rclib](https://github.com/hrshtst/rclib) can learn on a planar arm simulated
 with [skelarm](https://github.com/hrshtst/skelarm).
 
-> **Status:** scaffold. The first experiment, feedback learned from scratch for
-> one reach, is being prepared.
+> **Status:** report [001](reports/001-feedback-from-scratch/README.md) answers
+> RQ1 for one reach: the decorrelated rule learns feedback from scratch on every
+> seed, to 6 to 9 mm against the weak PD's 170 mm; the plain rule's gains run
+> away on half of its seeds.
 
 ## Motivation
 
@@ -178,7 +180,7 @@ so imports resolve against the project's `.venv`.
 
 ## Reports
 
-`reports/` will hold one directory per study:
+`reports/` holds one directory per study:
 
 ```text
 reports/001-<slug>/
@@ -196,6 +198,10 @@ Each report has five parts:
 4. **Observations:** what the results show, including what did not work,
    and what is not claimed.
 5. **Next steps.**
+
+| Report | Question | Answer, in short |
+| --- | --- | --- |
+| [001 Feedback from scratch](reports/001-feedback-from-scratch/README.md) | RQ1: can RMHL learn feedback for a weak PD from one reward per reach? | Yes with the decorrelated rule, to 6 to 9 mm in 3,000 reaches on every seed; the plain rule's gains run away on half of its seeds. |
 
 ## Dependencies
 

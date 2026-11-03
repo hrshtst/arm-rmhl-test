@@ -1,0 +1,6 @@
+config = "experiments/feedback_from_scratch/tune_plain_inertia_round2.toml"
+command = "experiments/learn_feedback.py experiments/feedback_from_scratch/tune_plain_inertia_round2.toml --workers 7"
+started = 2026-11-03 23:11:46+09:00
+host = "delbosque"
+commit = "b5383fdfbd50acfd912d38530f2be87b9dfedd74"
+uncommitted_changes = false

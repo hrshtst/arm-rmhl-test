@@ -1,0 +1,6 @@
+config = "experiments/feedback_from_scratch/final_plain_raw.toml"
+command = "experiments/learn_feedback.py experiments/feedback_from_scratch/final_plain_raw.toml --workers 5"
+started = 2026-11-03 23:31:57+09:00
+host = "delbosque"
+commit = "bf7fe7d175f0af48c34d8769944468d448fb4751"
+uncommitted_changes = false
