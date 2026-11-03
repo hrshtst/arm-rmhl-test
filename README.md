@@ -107,7 +107,17 @@ arm-rmhl-test/
 
 ## Experiments
 
-None yet.
+Each experiment is a directory under [`experiments/`](experiments/README.md),
+with a README that describes it and its configuration files; the runner scripts
+that run them are shared. None has been added yet.
+
+Every parameter that affects a result is in a TOML configuration file, and every
+run records its configuration, the command, and the commit that produced it, so
+that running the same configuration again on the same machine reproduces the same
+result. Runs go into a storage root outside the repository, filed by experiment:
+`<storage root>/results/<experiment>/<date>-<time>-<configuration name>/`.
+[`experiments/README.md`](experiments/README.md) describes the configurations, the
+run records, reproducibility, and the storage.
 
 ## Getting started
 
@@ -122,6 +132,9 @@ git clone --recursive <repository-url> arm-rmhl-test
 cd arm-rmhl-test
 uv sync        # builds rclib from the submodule and installs skelarm
 uv run pytest  # quick sanity check
+
+# Optional: keep results outside the repository
+echo 'storage_root = "/path/to/storage"' > storage.toml
 ```
 
 If you cloned without `--recursive`, run

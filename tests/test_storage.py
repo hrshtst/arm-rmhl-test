@@ -1,0 +1,91 @@
+# Copyright (C) 2026 Hiroshi Atsuta <atsuta@ieee.org>
+# SPDX-License-Identifier: GPL-3.0-only
+
+"""Tests for the storage root lookup and the run records."""
+
+import tomllib
+from pathlib import Path
+
+import pytest
+
+from arm_rmhl_test.storage import ENV_VAR, resolve_run_path, start_run, storage_root
+
+
+def test_storage_root_defaults_to_storage_in_repository(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv(ENV_VAR, raising=False)
+    assert storage_root(repo_root=tmp_path) == tmp_path / "storage"
+
+
+def test_storage_root_is_read_from_storage_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv(ENV_VAR, raising=False)
+    (tmp_path / "storage.toml").write_text('storage_root = "../elsewhere"\n')
+    assert storage_root(repo_root=tmp_path) == (tmp_path.parent / "elsewhere").resolve()
+
+
+def test_environment_variable_overrides_storage_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    (tmp_path / "storage.toml").write_text('storage_root = "from-file"\n')
+    monkeypatch.setenv(ENV_VAR, str(tmp_path / "from-env"))
+    assert storage_root(repo_root=tmp_path) == tmp_path / "from-env"
+
+
+def test_start_run_records_config_and_code_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(ENV_VAR, str(tmp_path / "store"))
+    config_text = "# Learning settings\n[rule]\nlearning_rate = 1.0\nseed = 7\n"
+    config_path = tmp_path / "some_experiment" / "example.toml"
+    config_path.parent.mkdir()
+    config_path.write_text(config_text)
+
+    config, run_dir = start_run(config_path)
+
+    assert config == {"rule": {"learning_rate": 1.0, "seed": 7}}
+    assert run_dir.parent == tmp_path / "store" / "results" / "some_experiment"  # named after the config's directory
+    assert run_dir.name.endswith("-example")
+    assert (run_dir / "config.toml").read_text() == config_text
+    record = tomllib.loads((run_dir / "run.toml").read_text())
+    assert len(record["commit"]) == 40
+    assert isinstance(record["uncommitted_changes"], bool)
+
+
+def test_start_run_never_reuses_a_run_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(ENV_VAR, str(tmp_path / "store"))
+    config_path = tmp_path / "example.toml"
+    config_path.write_text("")
+
+    run_dirs = {start_run(config_path)[1] for _ in range(3)}
+
+    assert len(run_dirs) == 3
+
+
+def stored_run(tmp_path: Path, experiment: str, name: str) -> Path:
+    run = tmp_path / "store" / "results" / experiment / name
+    run.mkdir(parents=True)
+    (run / "weights.npz").write_text("")
+    return run
+
+
+def test_a_run_is_found_by_its_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(ENV_VAR, str(tmp_path / "store"))
+    run = stored_run(tmp_path, "reach", "20261103-120454-pilot")
+
+    assert resolve_run_path("results/reach/20261103-120454-pilot") == run
+    assert resolve_run_path("results/reach/20261103-120454-pilot/weights.npz") == run / "weights.npz"
+
+
+def test_a_run_is_found_by_its_name_alone(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(ENV_VAR, str(tmp_path / "store"))
+    run = stored_run(tmp_path, "reach", "20261103-120454-pilot")
+
+    assert resolve_run_path("results/20261103-120454-pilot") == run
+    assert resolve_run_path("results/20261103-120454-pilot/weights.npz") == run / "weights.npz"
+    assert resolve_run_path("results/elsewhere/20261103-120454-pilot") == run  # moved to another experiment
+
+
+def test_a_missing_or_ambiguous_run_is_reported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(ENV_VAR, str(tmp_path / "store"))
+    stored_run(tmp_path, "one", "20261103-120454-pilot")
+    stored_run(tmp_path, "two", "20261103-120454-pilot")
+
+    with pytest.raises(FileNotFoundError, match="no run"):
+        resolve_run_path("results/20261103-999999-missing")
+    with pytest.raises(FileNotFoundError, match="several runs"):
+        resolve_run_path("results/20261103-120454-pilot")
