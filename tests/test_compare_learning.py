@@ -13,6 +13,7 @@ import pd_grid
 import pytest
 from compare_learning import Arm, summarize_arm
 from conftest import Runner
+from matplotlib.text import Annotation
 
 
 def arm(outcomes: list[str], finals: list[float], bests: list[float]) -> Arm:
@@ -30,6 +31,21 @@ def test_an_arm_is_summarized_over_its_trainings_a_diverged_one_infinitely_far()
     assert row["median_final_error_m"] == 0.7
     assert (row["min_final_error_m"], row["max_final_error_m"]) == (0.05, np.inf)
     assert row["median_best_error_m"] == pytest.approx(0.12)
+
+
+def test_the_pds_are_labeled_once_beside_the_last_panel():
+    references = [("PD alone", 0.17), ("closest PD, 80 rad/s, 0.2", 0.0008)]
+
+    fig = compare_learning.plot_learning([arm(["improved"], [0.05], [0.04])] * 2, references, "title")
+
+    first, last = fig.axes
+    assert len(first.texts) == 0
+    assert [text.get_text() for text in last.texts] == ["PD alone", "closest PD, 80 rad/s, 0.2"]
+    # Outside the panel, to the right of it.
+    assert all(
+        isinstance(text, Annotation) and text.xy[0] == 1.0 and text.get_horizontalalignment() == "left"
+        for text in last.texts
+    )
 
 
 def test_the_comparison_draws_the_arms_against_the_pds(config: dict[str, Any], run_runner: Runner):

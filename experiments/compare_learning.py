@@ -16,7 +16,8 @@ receives:
 
 - ``learning.png``: the noise-free tracking error over the trials learned from, a
   panel per arm: each training thin, their median thick (a diverged training
-  counting as infinitely far), and the PDs' errors as dashed lines;
+  counting as infinitely far), and the PDs' errors as dashed lines, labeled
+  beside the last panel;
 - ``arms.csv``: a row per arm: its trainings, how many improved on the PD alone,
   ended worse, or diverged, and the median, smallest, and largest final error and
   the median best error (m); a diverged training's final error is infinite.
@@ -146,19 +147,8 @@ def plot_learning(arms: list[Arm], references: list[tuple[str, float]], title: s
     axes = np.atleast_1d(fig.subplots(1, len(arms), sharey=True, squeeze=False)[0])
     for ax, arm, color in zip(axes, arms, CATEGORICAL, strict=False):
         _style(ax)
-        for label, error in references:
+        for _, error in references:
             ax.axhline(1000 * error, color=PD_COLOR, linestyle="--", linewidth=1.2)
-            ax.annotate(
-                label,
-                (1.0, 1000 * error),
-                xycoords=("axes fraction", "data"),
-                xytext=(-2, 2),
-                textcoords="offset points",
-                ha="right",
-                va="bottom",
-                fontsize=6.5,
-                color=TEXT_COLOR,
-            )
         # A diverged training counts as infinitely far from then on: the median holds while most remain.
         errors = 1000 * np.where(np.isfinite(arm.evaluations), arm.evaluations, np.inf)
         for training in errors:
@@ -170,6 +160,20 @@ def plot_learning(arms: list[Arm], references: list[tuple[str, float]], title: s
         ax.set_title(f"{arm.label} ({len(arm.rows)} trainings)", color=TITLE_COLOR, fontsize=9)
         ax.set_xlabel("trials learned from", color=TEXT_COLOR)
     axes[0].set_ylabel("tracking error (mm)", color=TEXT_COLOR)
+    # The panels share the y-axis, so the PDs are labeled once, beside the last panel, clear of the curves.
+    for label, error in references:
+        axes[-1].annotate(
+            label,
+            (1.0, 1000 * error),
+            xycoords=("axes fraction", "data"),
+            xytext=(4, 0),
+            textcoords="offset points",
+            ha="left",
+            va="center",
+            fontsize=6.5,
+            color=TEXT_COLOR,
+            annotation_clip=False,
+        )
     return fig
 
 
