@@ -7,7 +7,7 @@ experiments and live directly in this directory.
 
 | Experiment | What it studies | Runners | Report |
 | --- | --- | --- | --- |
-| [`feedback_from_scratch`](feedback_from_scratch/README.md) | RQ1: feedback torques learned from zero for one reach under a weak PD, against the PD alone over a grid of gains | `pd_grid.py`, `learn_feedback.py` | not yet |
+| [`feedback_from_scratch`](feedback_from_scratch/README.md) | RQ1: feedback torques learned from zero for one reach under a weak PD, against the PD alone over a grid of gains | `pd_grid.py`, `learn_feedback.py`, `compare_learning.py` | not yet |
 
 The runners:
 
@@ -15,6 +15,9 @@ The runners:
   a sweep of its gains;
 - `learn_feedback.py` learns feedback torques from one reward per reach, for every
   combination of a sweep, over `--workers` processes.
+- `compare_learning.py` draws the noise-free learning of several runs of
+  `learn_feedback.py`, normally one per rule, each over its seeds, against joint
+  PDs of a run of `pd_grid.py`.
 
 A `[sweep]` table lists values for settings of a configuration by their dotted
 paths, such as `"rule.learning_rate" = [1.0, 3.0]`; every combination of the

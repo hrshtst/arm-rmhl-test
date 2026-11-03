@@ -63,6 +63,10 @@ PD_COLOR = "#a3a29d"
 CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
 RAMP = ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281", "#0d366b"]
 PLAIN = FuncFormatter(lambda value, _: f"{value:g}")  # log-axis labels as plain numbers
+# Between the decades, only 2 and 5 are labeled.
+SPARSE = FuncFormatter(
+    lambda value, _: f"{value:g}" if round(value / 10 ** np.floor(np.log10(value))) in (2, 5) else ""
+)
 
 
 def main() -> None:
@@ -162,7 +166,7 @@ def plot_learning(
             _draw_training(ax, training, color, "" if value is None else _format(value))
         ax.set_yscale("log")
         ax.yaxis.set_major_formatter(PLAIN)
-        ax.yaxis.set_minor_formatter(PLAIN)
+        ax.yaxis.set_minor_formatter(SPARSE)
         panel = ", ".join(f"{name.rsplit('.', 1)[-1]} = {_format(value)}" for name, value in grouped)
         ax.set_title(panel, color=TITLE_COLOR, fontsize=9)
     for ax in axes.flat[len(panels) :]:
