@@ -66,6 +66,7 @@ skelarm raised.
 | `final_decorrelated_raw.toml` | `learn_feedback.py` | the final runs of the decorrelated rule with raw torque: 3.2 N m, learning rate 2.5 |
 | `final_plain_inertia.toml` | `learn_feedback.py` | the final runs of the plain rule with inertia-scaled feedback: 4 rad/s^2, learning rate 0.15 |
 | `final_decorrelated_inertia.toml` | `learn_feedback.py` | the final runs of the decorrelated rule with inertia-scaled feedback: 8 rad/s^2, learning rate 50 |
+| `compare_final.toml` | `compare_learning.py` | the four final runs against the PD alone and PDs of the grid |
 
 ```bash
 uv run python experiments/pd_grid.py experiments/feedback_from_scratch/pd_grid.toml

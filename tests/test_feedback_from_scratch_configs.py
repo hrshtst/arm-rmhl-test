@@ -14,7 +14,7 @@ from arm_rmhl_test.storage import REPO_ROOT
 from arm_rmhl_test.sweeps import expand
 
 EXPERIMENT = REPO_ROOT / "experiments/feedback_from_scratch"
-CONFIGS = sorted(EXPERIMENT.glob("*.toml"))
+CONFIGS = sorted(path for path in EXPERIMENT.glob("*.toml") if not path.stem.startswith("compare_"))  # runs of the arm
 TUNING = [path for path in CONFIGS if path.stem.startswith("tune_")]
 SHARED = ("initial", "skeleton", "simulator", "reach", "command")
 
