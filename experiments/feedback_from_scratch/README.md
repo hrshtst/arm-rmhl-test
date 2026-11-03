@@ -14,9 +14,15 @@ the best joint PD of a grid? This is RQ1 of the [project README](../../README.md
 - **The weak PD** has a natural frequency of 5 rad/s and a damping ratio of 0.7,
   scaled by each joint's inertia at the start. Alone, it lags 170 mm behind the
   reference on average.
-- **The feedback** is the readout's output, every 10 ms, from the tracking error
-  `[q_ref - q, dq_ref - dq]` and a constant 1. It starts at zero weights and adds
-  to the PD's torque; both are held over the period.
+- **The feedback** comes from the readout's output, every 10 ms, from the tracking
+  error `[q_ref - q, dq_ref - dq]` and a constant 1. It starts at zero weights and
+  adds to the PD's torque; both are held over the period. It has two variants:
+  - **raw torque**: the output is the torque (N m);
+  - **inertia-scaled**: each joint's output is multiplied by its inertia at the
+    start, as the PD's gains are. The output is then in rad/s^2, and the weights
+    read as the PD's `omega^2` and `2 zeta omega`.
+
+  The exploration noise is added to the output, in its units.
 - **The reward** is minus the reach's tracking error: the hand's mean distance from
   where the reference puts it, over the 200 control periods, with no dead zone.
 - **The rule** is `burms2015` of rclib: Gaussian exploration on the output, and one
@@ -32,10 +38,11 @@ skelarm raised.
 
 1. **The yardstick.** `pd_grid.toml` runs the PD alone over a grid of natural
    frequencies and damping ratios.
-2. **Tuning.** For each rule, the learning rate and the exploration amplitude are
-   tuned by hand on seed 0, in rounds of `tune_<rule>*.toml`.
-3. **The final runs.** Each rule's tuned settings run on seeds 1 to 5, which the
-   tuning never saw, with the same trial budget.
+2. **Tuning.** For each rule and variant, the learning rate and the exploration
+   amplitude are tuned by hand on seed 0, in rounds of `tune_<rule>*.toml` of
+   1,000 trials each.
+3. **The final runs.** The tuned settings of each rule and variant run on seeds 1
+   to 5, which the tuning never saw, all with the same trial budget.
 
 ## Configurations
 
@@ -44,11 +51,14 @@ skelarm raised.
 | `pd_grid.toml` | `pd_grid.py` | the PD alone, 13 natural frequencies (2 to 160 rad/s) by 6 damping ratios (0.1 to 1.4) |
 | `tune_plain.toml` | `learn_feedback.py` | tuning round 1 of the plain rule, seed 0: 3 exploration amplitudes (0.05 to 0.2 N m) by 5 learning rates (0.3 to 30), 1,000 trials |
 | `tune_decorrelated.toml` | `learn_feedback.py` | tuning round 1 of the decorrelated rule, seed 0: the same amplitudes by 5 learning rates (10 to 1,000), 1,000 trials |
+| `tune_plain_round2.toml` | `learn_feedback.py` | tuning round 2 of the plain rule with raw torque: amplitudes 0.2 to 0.8 N m by 5 learning rates (0.12 to 2) |
+| `tune_decorrelated_round2.toml` | `learn_feedback.py` | tuning round 2 of the decorrelated rule with raw torque: amplitudes 0.2 to 0.8 N m by 5 learning rates (5 to 80) |
+| `tune_plain_inertia.toml` | `learn_feedback.py` | tuning round 1 of the plain rule with inertia-scaled feedback: amplitudes 0.5 to 4 rad/s^2 by 6 learning rates (0.3 to 100) |
+| `tune_decorrelated_inertia.toml` | `learn_feedback.py` | tuning round 1 of the decorrelated rule with inertia-scaled feedback: amplitudes 0.5 to 4 rad/s^2 by 6 learning rates (10 to 3,000) |
 
 ```bash
 uv run python experiments/pd_grid.py experiments/feedback_from_scratch/pd_grid.toml
-uv run python experiments/learn_feedback.py experiments/feedback_from_scratch/tune_plain.toml --workers 15
-uv run python experiments/learn_feedback.py experiments/feedback_from_scratch/tune_decorrelated.toml --workers 15
+uv run python experiments/learn_feedback.py experiments/feedback_from_scratch/<configuration>.toml --workers 15
 ```
 
 ## Runs
