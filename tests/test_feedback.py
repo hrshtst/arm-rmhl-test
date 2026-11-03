@@ -11,10 +11,14 @@ from rclib import learning
 
 from arm_rmhl_test.arm import command_gains, make_arm, make_reach, run_reach, tracking_error
 from arm_rmhl_test.feedback import (
+    Training,
     feedback_gains,
+    learn,
     make_model,
     make_rule,
     run_trial,
+    split_weights,
+    summarize,
     train,
     training_settings,
 )
@@ -66,7 +70,7 @@ def test_a_fresh_model_adds_no_torque(setup):
 
     assert error == tracking_error(run_reach(arm, reach, kp, kd), reach)
     np.testing.assert_array_equal(run.feedback, 0.0)
-    for gains in feedback_gains(model, arm.num_joints):
+    for gains in feedback_gains(model):
         np.testing.assert_array_equal(gains, 0.0)
 
 
@@ -76,7 +80,7 @@ def test_the_weights_read_as_stiffness_damping_and_a_constant_torque():
     model.get_readout().setWeights(weights)
     error = np.array([0.1, -0.2, 0.3, 0.4])
 
-    stiffness, damping, constant = feedback_gains(model, joints=2)
+    stiffness, damping, constant = feedback_gains(model)
 
     torque = model.act(error.reshape(1, -1), explore=False)[0]
     np.testing.assert_allclose(torque, stiffness @ error[:2] + damping @ error[2:] + constant)
@@ -139,3 +143,62 @@ def test_the_training_table_gives_the_settings_of_train():
     config = {"training": {"trials": 1000, "dead_zone": 0.0, "evaluate_every": 20}}
 
     assert training_settings(config) == {"trials": 1000, "dead_zone": 0.0, "evaluate_every": 20}
+
+
+def test_learning_from_a_configuration_trains_a_fresh_model(setup, config: dict[str, Any]):
+    arm, reach, kp, kd = setup
+    config |= {"rule": RULE, "training": {"trials": 3, "dead_zone": 0.0, "evaluate_every": 2}}
+    model = make_model(make_rule(RULE), arm.num_joints)
+
+    training = learn(config)
+
+    expected = train(model, arm, reach, kp, kd, trials=3, dead_zone=0.0, evaluate_every=2)
+    np.testing.assert_array_equal(training.errors, expected.errors)
+    np.testing.assert_array_equal(training.weights, expected.weights)
+
+
+def training(evaluations: list[float], diverged: str | None = None) -> Training:
+    """A training of four trials evaluated every two, whose final weights count up from 0."""
+    weights = np.full((len(evaluations), 5, 2), np.nan)
+    if diverged is None:
+        weights[-1] = np.arange(10.0).reshape(5, 2)
+    return Training(np.full(4, 0.1), np.array([0, 2, 4]), np.array(evaluations), weights, diverged)
+
+
+def test_the_weights_split_into_gains_with_a_row_per_joint_torque():
+    stiffness, damping, constant = split_weights(np.arange(10.0).reshape(5, 2))
+
+    np.testing.assert_array_equal(stiffness, [[0.0, 2.0], [1.0, 3.0]])
+    np.testing.assert_array_equal(damping, [[4.0, 6.0], [5.0, 7.0]])
+    np.testing.assert_array_equal(constant, [8.0, 9.0])
+
+
+def test_a_summary_gives_the_errors_the_outcome_and_the_final_gains():
+    row = summarize(training([0.17, 0.12, 0.13]))
+
+    assert row["pd_error_m"] == 0.17
+    assert row["final_error_m"] == 0.13
+    assert (row["best_error_m"], row["best_after"]) == (0.12, 2)
+    assert (row["outcome"], row["diverged"]) == ("improved", "")
+    assert (row["stiffness_12"], row["stiffness_21"], row["damping_11"], row["constant_2"]) == (2.0, 1.0, 4.0, 9.0)
+
+
+def test_a_final_error_no_better_than_the_pds_is_worse():
+    assert summarize(training([0.17, 0.12, 0.7]))["outcome"] == "worse"
+
+
+def test_a_diverged_training_is_summarized_by_what_it_reached():
+    row = summarize(training([0.17, np.inf, np.nan], diverged="OverflowError: math range error"))
+
+    assert row["outcome"] == "diverged"
+    assert row["diverged"] == "OverflowError: math range error"
+    assert (row["best_error_m"], row["best_after"]) == (0.17, 0)
+    assert np.isnan(row["final_error_m"])
+    assert np.isnan(row["stiffness_11"])
+
+
+def test_a_training_that_diverged_at_once_has_no_best():
+    row = summarize(training([np.inf, np.nan, np.nan], diverged="RuntimeError: the output is not finite"))
+
+    assert np.isnan(row["best_error_m"])
+    assert row["best_after"] == -1

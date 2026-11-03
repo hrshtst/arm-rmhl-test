@@ -36,7 +36,7 @@ import numpy as np
 from rclib import ESN, learning, readouts, reservoirs
 from skelarm import Skeleton
 
-from arm_rmhl_test.arm import Array, Reach, ReachRun, run_reach, tracking_error
+from arm_rmhl_test.arm import Array, Reach, ReachRun, command_gains, make_arm, make_reach, run_reach, tracking_error
 
 _OPTIONAL = {field.name for field in dataclasses.fields(learning.RewardModulatedHebbian) if field.default is None}
 
@@ -100,9 +100,18 @@ def make_model(rule: learning.RewardModulatedHebbian, joints: int) -> ESN:
     return model
 
 
-def feedback_gains(model: ESN, joints: int) -> tuple[Array, Array, Array]:
-    """The readout's weights as the stiffness matrix, the damping matrix, and the constant torque."""
-    weights = np.asarray(model.get_readout().getWeights())
+def feedback_gains(model: ESN) -> tuple[Array, Array, Array]:
+    """The model's stiffness matrix, damping matrix, and constant torque (see :func:`split_weights`)."""
+    return split_weights(np.asarray(model.get_readout().getWeights()))
+
+
+def split_weights(weights: Array) -> tuple[Array, Array, Array]:
+    """The readout's weights as the stiffness matrix, the damping matrix, and the constant torque.
+
+    The weights have shape ``(2 joints + 1, joints)``, the bias in the last row. Row
+    ``i`` of each matrix gives joint ``i``'s torque per error of each joint.
+    """
+    joints = weights.shape[1]
     return weights[:joints].T, weights[joints : 2 * joints].T, weights[2 * joints]
 
 
@@ -182,3 +191,49 @@ def training_settings(config: Mapping[str, Any]) -> dict[str, Any]:
         "dead_zone": float(table["dead_zone"]),
         "evaluate_every": int(table["evaluate_every"]),
     }
+
+
+def learn(config: Mapping[str, Any]) -> Training:
+    """Train a fresh model on the configuration's arm, reach, PD, rule and training."""
+    arm = make_arm(config)
+    reach = make_reach(config, arm)
+    kp, kd = command_gains(config, arm)
+    model = make_model(make_rule(config["rule"]), arm.num_joints)
+    return train(model, arm, reach, kp, kd, **training_settings(config))
+
+
+def summarize(training: Training) -> dict[str, Any]:
+    """How a training went, as one row of a table.
+
+    The row holds the noise-free tracking errors (m) of the PD alone, before
+    learning (``pd_error_m``), at the end (``final_error_m``), and the lowest of all
+    evaluations (``best_error_m``) with the trials learned from before it
+    (``best_after``); the ``outcome``: ``"diverged"`` if the arm diverged,
+    ``"improved"`` if the final error is below the PD's, and ``"worse"`` if not;
+    why the arm diverged (``diverged``, empty if it did not); and the final gains:
+    ``stiffness_<i><k>`` (N m/rad) and ``damping_<i><k>`` (N m s/rad), the torque on
+    joint ``i`` per error of joint ``k``, and ``constant_<i>`` (N m). After a
+    divergence, the final error and gains are ``nan``.
+    """
+    evaluations = training.evaluations
+    completed = np.where(np.isfinite(evaluations), evaluations, np.nan)
+    pd_error, final_error = float(evaluations[0]), float(evaluations[-1])
+    if training.diverged is not None:
+        outcome = "diverged"
+    elif final_error < pd_error:
+        outcome = "improved"
+    else:
+        outcome = "worse"
+    row: dict[str, Any] = {"pd_error_m": pd_error, "final_error_m": final_error}
+    if np.isnan(completed).all():
+        row |= {"best_error_m": np.nan, "best_after": -1}
+    else:
+        best = int(np.nanargmin(completed))
+        row |= {"best_error_m": float(completed[best]), "best_after": int(training.evaluated_at[best])}
+    row |= {"outcome": outcome, "diverged": training.diverged or ""}
+    stiffness, damping, constant = split_weights(training.weights[-1])
+    joints = len(constant)
+    for name, gains in (("stiffness", stiffness), ("damping", damping)):
+        row |= {f"{name}_{i + 1}{k + 1}": float(gains[i, k]) for i in range(joints) for k in range(joints)}
+    row |= {f"constant_{i + 1}": float(constant[i]) for i in range(joints)}
+    return row
