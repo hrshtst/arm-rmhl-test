@@ -1,0 +1,13 @@
+# The decorrelated rule's longer budget, over seeds 1 to 5, against PDs of the grid.
+
+[[arm]]
+run = "results/feedback_from_scratch/20261104-002706-long_decorrelated_raw"
+label = "decorrelated, raw torque"
+
+[[arm]]
+run = "results/feedback_from_scratch/20261104-002706-long_decorrelated_inertia"
+label = "decorrelated, inertia-scaled"
+
+[pd]
+run = "results/feedback_from_scratch/20261103-210822-pd_grid"
+marks = [[20.0, 0.7], [28.0, 0.7], [40.0, 0.4]]  # rad/s and damping ratio

@@ -72,6 +72,7 @@ skelarm raised.
 | `compare_final.toml` | `compare_learning.py` | the four final runs against the PD alone and PDs of the grid |
 | `long_decorrelated_raw.toml` | `learn_feedback.py` | a longer budget for the decorrelated rule with raw torque: the final runs' setting and seeds, for 10,000 trials |
 | `long_decorrelated_inertia.toml` | `learn_feedback.py` | a longer budget for the decorrelated rule with inertia-scaled feedback, likewise |
+| `compare_long.toml` | `compare_learning.py` | the two runs of a longer budget against the PD alone and PDs of the grid |
 
 ```bash
 uv run python experiments/pd_grid.py experiments/feedback_from_scratch/pd_grid.toml
