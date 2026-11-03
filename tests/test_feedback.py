@@ -8,11 +8,13 @@ from typing import Any
 import numpy as np
 import pytest
 from rclib import learning
+from skelarm.dynamics import compute_mass_matrix
 
 from arm_rmhl_test.arm import command_gains, make_arm, make_reach, run_reach, tracking_error
 from arm_rmhl_test.feedback import (
     Training,
     feedback_gains,
+    feedback_scale,
     learn,
     make_model,
     make_rule,
@@ -162,7 +164,7 @@ def training(evaluations: list[float], diverged: str | None = None) -> Training:
     weights = np.full((len(evaluations), 5, 2), np.nan)
     if diverged is None:
         weights[-1] = np.arange(10.0).reshape(5, 2)
-    return Training(np.full(4, 0.1), np.array([0, 2, 4]), np.array(evaluations), weights, diverged)
+    return Training(np.full(4, 0.1), np.array([0, 2, 4]), np.array(evaluations), weights, np.ones(2), diverged)
 
 
 def test_the_weights_split_into_gains_with_a_row_per_joint_torque():
@@ -202,3 +204,39 @@ def test_a_training_that_diverged_at_once_has_no_best():
 
     assert np.isnan(row["best_error_m"])
     assert row["best_after"] == -1
+
+
+def test_the_feedback_scale_is_one_or_each_joints_inertia(config: dict[str, Any]):
+    arm = make_arm(config)
+
+    np.testing.assert_array_equal(feedback_scale(config, arm), [1.0, 1.0])
+    np.testing.assert_array_equal(feedback_scale({"feedback": {"scale": "none"}}, arm), [1.0, 1.0])
+    inertia = np.diag(compute_mass_matrix(arm))
+    np.testing.assert_array_equal(feedback_scale({"feedback": {"scale": "inertia"}}, arm), inertia)
+    with pytest.raises(ValueError, match="unknown feedback scale"):
+        feedback_scale({"feedback": {"scale": "mass"}}, arm)
+
+
+def test_the_scaled_feedback_torque_is_the_output_times_the_scale(setup):
+    arm, reach, kp, kd = setup
+    model = make_model(make_rule(RULE), arm.num_joints)
+    model.get_readout().setWeights(np.random.default_rng(0).normal(scale=0.1, size=(5, 2)))
+    scale = np.array([0.5, 2.0])
+
+    _, run = run_trial(model, arm, reach, kp, kd, dead_zone=0.0, scale=scale, explore=False)
+
+    error = np.concatenate((reach.q_ref[3] - run.q[3], reach.dq_ref[3] - run.dq[3]))
+    output = model.act(error.reshape(1, -1), explore=False)[0]
+    np.testing.assert_allclose(run.feedback[3], scale * output)
+
+
+def test_the_summary_gives_the_gains_of_the_torque():
+    scaled = training([0.17, 0.12, 0.13])
+    scaled = Training(
+        scaled.errors, scaled.evaluated_at, scaled.evaluations, scaled.weights, np.array([0.5, 2.0]), None
+    )
+
+    row = summarize(scaled)
+
+    assert (row["stiffness_12"], row["stiffness_21"]) == (0.5 * 2.0, 2.0 * 1.0)  # row i is joint i's torque
+    assert (row["damping_11"], row["constant_2"]) == (0.5 * 4.0, 2.0 * 9.0)

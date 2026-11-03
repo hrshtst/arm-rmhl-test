@@ -6,22 +6,23 @@
     uv run python experiments/learn_feedback.py experiments/<experiment>/<configuration>.toml --workers 20
 
 The configuration describes the arm, the reach and the joint PD of ``[command]``
-(see :mod:`arm_rmhl_test.arm`), the rule and the training (see
-:mod:`arm_rmhl_test.feedback`), and an optional ``[sweep]`` of its settings (see
+(see :mod:`arm_rmhl_test.arm`), the feedback's scale, the rule and the training
+(see :mod:`arm_rmhl_test.feedback`), and an optional ``[sweep]`` of its settings (see
 :mod:`arm_rmhl_test.sweeps`), such as ``"rule.learning_rate"`` or the exploration's
 ``"rule.exploration.seed"``. Every combination trains a fresh model, from zero
 feedback. The run directory receives:
 
 - ``runs.csv``: one row per combination: its values, the summary of
   :func:`arm_rmhl_test.feedback.summarize` (the noise-free tracking errors of the
-  PD alone, at the end and at best, the outcome, and the final gains), and the
-  seconds it took;
+  PD alone, at the end and at best, the outcome, and the final gains of the
+  torque), and the seconds it took;
 - ``training.npz``: the course of every training, a row per combination in the
   order of ``runs.csv``: the tracking error of each exploring reach, ``errors``
   ``(combinations, trials)``; the trials learned from before each noise-free
   evaluation, ``evaluated_at``; their tracking errors, ``evaluations``
-  ``(combinations, evaluations)``; and the readout's weights then, ``weights``
-  ``(combinations, evaluations, 2 joints + 1, joints)``;
+  ``(combinations, evaluations)``; the readout's weights then, ``weights``
+  ``(combinations, evaluations, 2 joints + 1, joints)``; and each joint's factor
+  from the readout's output to the torque, ``scale`` ``(combinations, joints)``;
 - ``learning.png``: the noise-free tracking error over the trials learned from, one
   panel per combination of all but the last swept setting, one line per value of
   the last; the dashed line is the PD alone, and a cross marks where the arm
@@ -104,6 +105,7 @@ def main() -> None:
         evaluated_at=trainings[0].evaluated_at,
         evaluations=np.array([t.evaluations for t in trainings]),
         weights=np.array([t.weights for t in trainings]),
+        scale=np.array([t.scale for t in trainings]),
     )
     plot_learning(combinations, trainings, f"Feedback learned: {args.config.stem}").savefig(
         run_dir / "learning.png", dpi=150

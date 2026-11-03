@@ -10,10 +10,16 @@ joint PD's. At the end of each reach the readout receives one reward, minus the
 reach's tracking error, and updates its weights by the trial rule.
 
 The readout is linear with a bias, so its weights are a stiffness matrix ``K_p``, a
-damping matrix ``K_d``, and a constant torque ``c``:
-``tau_fb = K_p (q_ref - q) + K_d (dq_ref - dq) + c``.
+damping matrix ``K_d``, and a constant ``c``. The feedback torque is the readout's
+output ``y = K_p (q_ref - q) + K_d (dq_ref - dq) + c`` times a factor per joint, its
+scale: 1, so that the output is the torque (N m), or the joint's inertia, so that
+the output is in rad/s^2 like the PD's ``omega^2 e + 2 zeta omega de``. The
+exploration noise is added to the output, in its units.
 
-A configuration sets the rule and the training in two tables:
+A configuration sets the feedback, the rule and the training in three tables:
+
+- ``[feedback]``: the ``scale``, ``"none"`` or ``"inertia"`` (see
+  :func:`feedback_scale`); without the table, ``"none"``.
 
 - ``[rule]``: the ``preset`` of ``rclib.learning`` (such as ``"burms2015"``), its
   ``learning_rate``, a ``[rule.exploration]`` table and an optional
@@ -35,6 +41,7 @@ from typing import Any
 import numpy as np
 from rclib import ESN, learning, readouts, reservoirs
 from skelarm import Skeleton
+from skelarm.dynamics import compute_mass_matrix
 
 from arm_rmhl_test.arm import Array, Reach, ReachRun, command_gains, make_arm, make_reach, run_reach, tracking_error
 
@@ -58,6 +65,8 @@ class Training:
     weights : Array
         The readout's weights at each evaluation; shape ``(evaluations, features + 1, joints)``,
         the bias in the last row; ``nan`` for those never reached.
+    scale : Array
+        Each joint's factor from the readout's output to its feedback torque.
     diverged : str | None
         Why the run stopped early, the error raised when the arm diverged, or
         ``None`` if it completed every trial.
@@ -67,6 +76,7 @@ class Training:
     evaluated_at: Array
     evaluations: Array
     weights: Array
+    scale: Array
     diverged: str | None
 
 
@@ -115,12 +125,43 @@ def split_weights(weights: Array) -> tuple[Array, Array, Array]:
     return weights[:joints].T, weights[joints : 2 * joints].T, weights[2 * joints]
 
 
+def feedback_scale(config: Mapping[str, Any], arm: Skeleton) -> Array:
+    """Each joint's factor from the readout's output to its feedback torque, by the ``[feedback]`` table's ``scale``.
+
+    With ``"none"``, the default, the factor is 1: the output is the torque (N m).
+    With ``"inertia"``, it is the joint's diagonal entry of the mass matrix at the
+    arm's posture, normally the start of the reach, as in the PD's gains: the output
+    is in rad/s^2, and the weights read as ``omega^2`` and ``2 zeta omega``.
+
+    Raises
+    ------
+    ValueError
+        If the scale is neither.
+    """
+    scale = config.get("feedback", {}).get("scale", "none")
+    if scale == "none":
+        return np.ones(arm.num_joints)
+    if scale == "inertia":
+        return np.diag(compute_mass_matrix(arm)).copy()
+    msg = f"unknown feedback scale {scale!r}: use 'none' or 'inertia'"
+    raise ValueError(msg)
+
+
 def run_trial(
-    model: ESN, arm: Skeleton, reach: Reach, kp: Array, kd: Array, dead_zone: float, *, explore: bool = True
+    model: ESN,
+    arm: Skeleton,
+    reach: Reach,
+    kp: Array,
+    kd: Array,
+    dead_zone: float,
+    *,
+    scale: Array | None = None,
+    explore: bool = True,
 ) -> tuple[float, ReachRun]:
     """One reach under the PD and the model's feedback; return its tracking error and the run.
 
-    An exploring reach adds the noise and records the eligibility for the next
+    The feedback torque is the model's output times ``scale``, 1 by default. An
+    exploring reach adds the noise and records the eligibility for the next
     ``reinforce``; a noise-free reach changes no learning state.
 
     Raises
@@ -131,9 +172,10 @@ def run_trial(
         skelarm's kinematics raise ``OverflowError`` on a torque too large for them.
     """
     model.reset_reservoirs()
+    factor = np.ones(arm.num_joints) if scale is None else scale
 
     def feedback(error: Array) -> Array:
-        return model.act(error.reshape(1, -1), explore=explore)[0]
+        return factor * model.act(error.reshape(1, -1), explore=explore)[0]
 
     run = run_reach(arm, reach, kp, kd, feedback)
     return tracking_error(run, reach, dead_zone), run
@@ -149,15 +191,18 @@ def train(
     trials: int,
     dead_zone: float,
     evaluate_every: int,
+    scale: Array | None = None,
 ) -> Training:
     """Learn from ``trials`` exploring reaches, one reward each, with noise-free evaluations between.
 
-    A noise-free reach is evaluated before the first trial, after every
+    The feedback torque is the model's output times ``scale``, 1 by default. A
+    noise-free reach is evaluated before the first trial, after every
     ``evaluate_every`` trials, and after the last. When the arm diverges, which
     rclib or skelarm reports by raising (see :func:`run_trial`), the run stops
     there, as in rclib's body-control example, and records why.
     """
     joints = arm.num_joints
+    scale = np.ones(joints) if scale is None else np.asarray(scale, dtype=np.float64)
     evaluated_at = np.unique(np.append(np.arange(0, trials, evaluate_every), trials))
     evaluation_row = {int(trial): row for row, trial in enumerate(evaluated_at)}
     errors = np.full(trials, np.nan)
@@ -172,15 +217,15 @@ def train(
                     row = evaluation_row[trial]
                     weights[row] = model.get_readout().getWeights()
                     evaluations[row] = np.inf  # until the reach completes
-                    evaluations[row], _ = run_trial(model, arm, reach, kp, kd, dead_zone, explore=False)
+                    evaluations[row], _ = run_trial(model, arm, reach, kp, kd, dead_zone, scale=scale, explore=False)
                 if trial < trials:
                     errors[trial] = np.inf  # until the reach completes
-                    errors[trial], _ = run_trial(model, arm, reach, kp, kd, dead_zone)
+                    errors[trial], _ = run_trial(model, arm, reach, kp, kd, dead_zone, scale=scale)
                     model.reinforce(-errors[trial])
         except (ValueError, RuntimeError, OverflowError) as error:
             diverged = f"{type(error).__name__}: {error}"
             model.clear_eligibility()
-    return Training(errors, evaluated_at, evaluations, weights, diverged)
+    return Training(errors, evaluated_at, evaluations, weights, scale, diverged)
 
 
 def training_settings(config: Mapping[str, Any]) -> dict[str, Any]:
@@ -194,12 +239,12 @@ def training_settings(config: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def learn(config: Mapping[str, Any]) -> Training:
-    """Train a fresh model on the configuration's arm, reach, PD, rule and training."""
+    """Train a fresh model on the configuration's arm, reach, PD, feedback scale, rule and training."""
     arm = make_arm(config)
     reach = make_reach(config, arm)
     kp, kd = command_gains(config, arm)
     model = make_model(make_rule(config["rule"]), arm.num_joints)
-    return train(model, arm, reach, kp, kd, **training_settings(config))
+    return train(model, arm, reach, kp, kd, scale=feedback_scale(config, arm), **training_settings(config))
 
 
 def summarize(training: Training) -> dict[str, Any]:
@@ -210,10 +255,11 @@ def summarize(training: Training) -> dict[str, Any]:
     evaluations (``best_error_m``) with the trials learned from before it
     (``best_after``); the ``outcome``: ``"diverged"`` if the arm diverged,
     ``"improved"`` if the final error is below the PD's, and ``"worse"`` if not;
-    why the arm diverged (``diverged``, empty if it did not); and the final gains:
-    ``stiffness_<i><k>`` (N m/rad) and ``damping_<i><k>`` (N m s/rad), the torque on
-    joint ``i`` per error of joint ``k``, and ``constant_<i>`` (N m). After a
-    divergence, the final error and gains are ``nan``.
+    why the arm diverged (``diverged``, empty if it did not); and the final gains of
+    the feedback torque, the weights times the scale: ``stiffness_<i><k>`` (N m/rad)
+    and ``damping_<i><k>`` (N m s/rad), the torque on joint ``i`` per error of joint
+    ``k``, and ``constant_<i>`` (N m). After a divergence, the final error and gains
+    are ``nan``.
     """
     evaluations = training.evaluations
     completed = np.where(np.isfinite(evaluations), evaluations, np.nan)
@@ -231,7 +277,7 @@ def summarize(training: Training) -> dict[str, Any]:
         best = int(np.nanargmin(completed))
         row |= {"best_error_m": float(completed[best]), "best_after": int(training.evaluated_at[best])}
     row |= {"outcome": outcome, "diverged": training.diverged or ""}
-    stiffness, damping, constant = split_weights(training.weights[-1])
+    stiffness, damping, constant = split_weights(training.scale * training.weights[-1])
     joints = len(constant)
     for name, gains in (("stiffness", stiffness), ("damping", damping)):
         row |= {f"{name}_{i + 1}{k + 1}": float(gains[i, k]) for i in range(joints) for k in range(joints)}

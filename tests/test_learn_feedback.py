@@ -46,6 +46,7 @@ def test_every_combination_is_trained_and_recorded(sweep: dict[str, Any], run_ru
     np.testing.assert_array_equal(data["evaluated_at"], [0, 2, 4])
     assert data["errors"].shape == (2, 4)
     assert data["weights"].shape == (2, 3, 5, 2)
+    np.testing.assert_array_equal(data["scale"], 1.0)
     sweep["rule"]["exploration"]["seed"] = 1
     del sweep["sweep"]
     np.testing.assert_array_equal(data["evaluations"][1], learn(sweep).evaluations)
