@@ -330,5 +330,9 @@ What is not claimed:
 3. **Beyond one reach, and disturbances:** a feedforward of the reference may carry
    to new reaches. A push or a load at the hand should separate feedforward from
    feedback.
-4. **rclib:** a `getWeights` binding for the RLS readout. This report reads the
-   weights from its predictions instead.
+4. **rclib:** a `getWeights` binding for the RLS readout. Done: rclib has it since
+   `6aee1a9`, and the code reads the weights with it since then. This report's runs
+   read them from the readout's predictions instead, which rounds them by up to
+   about 1e-16 of their size. On the final setting, after 1, 3, 10, and 30 trials,
+   the two give tracking errors within 1.4e-17 m of each other. `make_tables.py`
+   replays the weights the runs stored, so its tables are unchanged.

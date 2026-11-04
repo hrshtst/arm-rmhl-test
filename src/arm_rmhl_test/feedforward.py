@@ -60,18 +60,11 @@ def reference_inputs(reach: Reach) -> Array:
 
 
 def readout_weights(model: ESN, joints: int) -> Array:
-    """The readout's weights: shape ``(3 joints + 1, joints)``, the bias in the last row; zero before its first fit.
-
-    rclib's RLS readout does not give its weights, so they are read from its linear
-    predictions: the bias is the output for a zero input, and each other row the
-    output for that input alone at 1, less the bias.
-    """
-    inputs = SIGNALS * joints
+    """The readout's weights: shape ``(3 joints + 1, joints)``, the bias in the last row; zero before its first fit."""
     readout = model.get_readout()
-    if readout.getInputDim() == 0:  # not fitted yet
-        return np.zeros((inputs + 1, joints))
-    outputs = np.asarray(readout.predict(np.vstack((np.eye(inputs), np.zeros(inputs)))))
-    return np.vstack((outputs[:-1] - outputs[-1], outputs[-1]))
+    if readout.getInputDim() == 0:  # not fitted yet: rclib creates the weights, at zero, at the first fit
+        return np.zeros((SIGNALS * joints + 1, joints))
+    return np.asarray(readout.getWeights())
 
 
 def split_weights(weights: Array) -> tuple[Array, Array, Array, Array]:

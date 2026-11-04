@@ -93,7 +93,7 @@ def test_the_weights_read_from_the_readout_give_its_predictions(setup):
 
     inputs = np.random.default_rng(0).normal(size=(10, 6))
     predicted = np.asarray(model.get_readout().predict(inputs))
-    np.testing.assert_allclose(inputs @ weights[:-1] + weights[-1], predicted, rtol=1e-10, atol=1e-12)
+    np.testing.assert_allclose(inputs @ weights[:-1] + weights[-1], predicted, rtol=1e-12, atol=1e-12)
 
 
 def test_training_learns_and_its_weights_replay_its_evaluations(setup):
