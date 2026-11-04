@@ -8,16 +8,19 @@ experiments and live directly in this directory.
 | Experiment | What it studies | Runners | Report |
 | --- | --- | --- | --- |
 | [`feedback_from_scratch`](feedback_from_scratch/README.md) | RQ1: feedback torques learned from zero for one reach under a weak PD, against the PD alone over a grid of gains | `pd_grid.py`, `learn_feedback.py`, `compare_learning.py` | [001](../reports/001-feedback-from-scratch/README.md) |
+| [`feedback_error_learning`](feedback_error_learning/README.md) | RQ1's supervised baseline: a feedforward learned by feedback-error learning with an RLS readout, for the same reach and weak PD | `learn_feedforward.py`, `compare_learning.py` | |
 
 The runners:
 
 - `pd_grid.py` tracks the reach with the joint PD alone, for every combination of
   a sweep of its gains;
 - `learn_feedback.py` learns feedback torques from one reward per reach, for every
-  combination of a sweep, over `--workers` processes.
+  combination of a sweep, over `--workers` processes;
+- `learn_feedforward.py` learns feedforward torques by feedback-error learning,
+  from a target every control period, likewise;
 - `compare_learning.py` draws the noise-free learning of several runs of
-  `learn_feedback.py`, normally one per rule, each over its seeds, against joint
-  PDs of a run of `pd_grid.py`.
+  `learn_feedback.py` or `learn_feedforward.py`, normally one per rule, each over
+  its seeds, against joint PDs of a run of `pd_grid.py`.
 
 A `[sweep]` table lists values for settings of a configuration by their dotted
 paths, such as `"rule.learning_rate" = [1.0, 3.0]`; every combination of the

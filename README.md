@@ -39,7 +39,8 @@ The study begins narrow, with one question:
    far behind its reference. Starting from zero weights, can an RMHL readout
    learn feedback torques from the arm's tracking error that make the reach
    accurate, from one reward per reach? How close does it come to the best PD
-   gains of a grid, scored by the same reward?
+   gains of a grid, scored by the same reward, and to a supervised online learner
+   given a target torque every control period?
 
 Later questions wait for its answer. Candidates are adapting to a change, such
 as a force field at the hand or a payload; reward fine-tuning of an arm-esn-ctrl
@@ -112,7 +113,9 @@ arm-rmhl-test/
 Each experiment is a directory under [`experiments/`](experiments/README.md),
 with a README that describes it and its configuration files; the runner scripts
 that run them are shared. The first is
-[`feedback_from_scratch`](experiments/feedback_from_scratch/README.md), for RQ1.
+[`feedback_from_scratch`](experiments/feedback_from_scratch/README.md), for RQ1;
+[`feedback_error_learning`](experiments/feedback_error_learning/README.md) gives it
+a supervised baseline.
 
 Every parameter that affects a result is in a TOML configuration file, and every
 run records its configuration, the command, and the commit that produced it, so
