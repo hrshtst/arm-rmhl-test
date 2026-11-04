@@ -45,3 +45,13 @@ def test_the_tuning_sweeps_the_forgetting_factor_by_delta_for_100_trials():
         "readout.forgetting": [1.0, 0.9999, 0.999, 0.99],
         "readout.delta": [0.1, 1.0, 10.0, 100.0],
     }
+
+
+def test_the_final_run_is_a_tuned_setting_for_1000_trials():
+    tuning, final = load(EXPERIMENT / "tune.toml"), load(EXPERIMENT / "final.toml")
+
+    settings = (final["readout"]["forgetting"], final["readout"]["delta"])
+    assert settings[0] in tuning["sweep"]["readout.forgetting"]
+    assert settings[1] in tuning["sweep"]["readout.delta"]
+    assert final["training"] == tuning["training"] | {"trials": 1000}
+    assert "sweep" not in final  # nothing is random: one training

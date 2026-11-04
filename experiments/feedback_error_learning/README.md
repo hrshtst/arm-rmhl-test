@@ -52,6 +52,7 @@ training, with no seeds.
 | Configuration | Runner | What it runs |
 | --- | --- | --- |
 | `tune.toml` | `learn_feedforward.py` | tuning: 4 forgetting factors (0.99 to 1) by 4 values of `delta` (0.1 to 100), 100 trials |
+| `final.toml` | `learn_feedforward.py` | the final run: a forgetting factor of 0.9999 and a `delta` of 10, 1,000 trials |
 
 ```bash
 uv run python experiments/learn_feedforward.py experiments/feedback_error_learning/<configuration>.toml --workers 16
@@ -59,4 +60,11 @@ uv run python experiments/learn_feedforward.py experiments/feedback_error_learni
 
 ## Runs
 
-Under `results/feedback_error_learning/` in the storage root. None yet.
+Under `results/feedback_error_learning/` in the storage root, all current.
+
+| Run | Result |
+| --- | --- |
+| `20261104-151717-tune` | 12 of 16 settings improve on the PD alone. The closest at 100 trials is a forgetting factor of 0.9999 with a `delta` of 10: 3.8 mm, still falling. At 0.999, every `delta` settles at 4.6 mm, after a best of 3.5 to 4.6 mm on the way. At 0.99, every `delta` reaches 3.5 to 5.3 mm within 10 trials, then runs away to 719 mm within 20, raising nothing. Without forgetting, the error falls more slowly: 6.0 to 59.9 mm at 100 trials. |
+
+A tuning training of 100 trials took 2.5 to 3 minutes with 16 running at once,
+about 0.85 s per trial, its evaluations included.
