@@ -72,6 +72,14 @@ def test_the_comparison_draws_the_arms_against_the_pds(config: dict[str, Any], r
     assert (run_dir / "learning.png").stat().st_size > 0
 
 
+def test_each_panel_is_titled_by_its_arm_and_its_trainings():
+    fig = compare_learning.plot_learning(
+        [arm(["improved"], [0.05], [0.04]), arm(["improved", "worse"], [0.05, 0.2], [0.04, 0.1])], [], "title"
+    )
+
+    assert [ax.get_title() for ax in fig.axes] == ["plain (1 training)", "plain (2 trainings)"]
+
+
 def test_the_trials_axis_is_linear_unless_log():
     assert compare_learning.trials_axis({}) == "linear"
     assert compare_learning.trials_axis({"plot": {"trials": "log"}}) == "log"

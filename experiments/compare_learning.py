@@ -90,7 +90,7 @@ def main() -> None:
         )
     for label, error in references:
         print(f"{label}: {1000 * error:.1f} mm")
-    plot_learning(arms, references, f"Feedback learned: {args.config.stem}", log_trials=log_trials).savefig(
+    plot_learning(arms, references, f"Learning compared: {args.config.stem}", log_trials=log_trials).savefig(
         run_dir / "learning.png", dpi=150
     )
     print(f"Wrote the results to {run_dir}")
@@ -186,7 +186,8 @@ def plot_learning(
             ax.set_xscale("symlog", linthresh=1.0, linscale=0.3)
             ax.set_xlim(0.0, float(arm.evaluated_at[-1]))  # the margins would reach below no trials
             ax.xaxis.set_major_formatter(PLAIN)
-        ax.set_title(f"{arm.label} ({len(arm.rows)} trainings)", color=TITLE_COLOR, fontsize=9)
+        trainings = f"{len(arm.rows)} training{'' if len(arm.rows) == 1 else 's'}"
+        ax.set_title(f"{arm.label} ({trainings})", color=TITLE_COLOR, fontsize=9)
         ax.set_xlabel("trials learned from", color=TEXT_COLOR)
     axes[0].set_ylabel("tracking error (mm)", color=TEXT_COLOR)
     # The panels share the y-axis, so the PDs are labeled once, beside the last panel, clear of the curves.
