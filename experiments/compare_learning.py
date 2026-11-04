@@ -11,8 +11,10 @@ the run is one training of the arm, normally one seed each. The ``[pd]`` table
 names a run of ``experiments/pd_grid.py`` by its ``run``, and ``marks``: pairs of
 a natural frequency (rad/s) and a damping ratio whose tracking error is drawn as a
 reference. The closest PD of the grid is always drawn, and so is the PD alone
-that the arms learned on, from their first noise-free reach. The run directory
-receives:
+that the arms learned on, from their first noise-free reach. An optional
+``[plot]`` table sets the axis of the trials, ``trials``: ``"linear"``, the
+default, or ``"log"``, logarithmic beyond 1 trial and linear below, so that the
+evaluation before learning shows. The run directory receives:
 
 - ``learning.png``: the noise-free tracking error over the trials learned from, a
   panel per arm: each training thin, their median thick (a diverged training
@@ -69,6 +71,7 @@ def main() -> None:
     args = parser.parse_args()
 
     config, run_dir = start_run(args.config)
+    log_trials = trials_axis(config) == "log"
     arms = [load_arm(resolve_run_path(table["run"]), table["label"]) for table in config["arm"]]
     pd_table = config["pd"]
     references = pd_references(resolve_run_path(pd_table["run"]), pd_table.get("marks", []))
@@ -87,8 +90,25 @@ def main() -> None:
         )
     for label, error in references:
         print(f"{label}: {1000 * error:.1f} mm")
-    plot_learning(arms, references, f"Feedback learned: {args.config.stem}").savefig(run_dir / "learning.png", dpi=150)
+    plot_learning(arms, references, f"Feedback learned: {args.config.stem}", log_trials=log_trials).savefig(
+        run_dir / "learning.png", dpi=150
+    )
     print(f"Wrote the results to {run_dir}")
+
+
+def trials_axis(config: dict[str, Any]) -> str:
+    """The axis of the trials, by the ``[plot]`` table: ``"linear"``, the default, or ``"log"``.
+
+    Raises
+    ------
+    ValueError
+        If it is neither.
+    """
+    axis = config.get("plot", {}).get("trials", "linear")
+    if axis not in ("linear", "log"):
+        msg = f"unknown axis of the trials {axis!r}: use 'linear' or 'log'"
+        raise ValueError(msg)
+    return axis
 
 
 def load_arm(run: Path, label: str) -> Arm:
@@ -140,8 +160,13 @@ def summarize_arm(arm: Arm) -> dict[str, Any]:
     }
 
 
-def plot_learning(arms: list[Arm], references: list[tuple[str, float]], title: str) -> Figure:
-    """The noise-free tracking error (mm) over the trials, a panel per arm, with the PDs' errors."""
+def plot_learning(
+    arms: list[Arm], references: list[tuple[str, float]], title: str, *, log_trials: bool = False
+) -> Figure:
+    """The noise-free tracking error (mm) over the trials, a panel per arm, with the PDs' errors.
+
+    With ``log_trials``, the trials' axis is logarithmic beyond 1 trial and linear below.
+    """
     fig = Figure(figsize=(1.2 + 3.8 * len(arms), 3.6), facecolor=SURFACE_COLOR, layout="constrained")
     fig.suptitle(f"{title}: noise-free tracking error", color=TITLE_COLOR)
     axes = np.atleast_1d(fig.subplots(1, len(arms), sharey=True, squeeze=False)[0])
@@ -157,6 +182,10 @@ def plot_learning(arms: list[Arm], references: list[tuple[str, float]], title: s
         ax.set_yscale("log")
         ax.yaxis.set_major_formatter(PLAIN)
         ax.yaxis.set_minor_formatter(SPARSE)
+        if log_trials:
+            ax.set_xscale("symlog", linthresh=1.0, linscale=0.3)
+            ax.set_xlim(0.0, float(arm.evaluated_at[-1]))  # the margins would reach below no trials
+            ax.xaxis.set_major_formatter(PLAIN)
         ax.set_title(f"{arm.label} ({len(arm.rows)} trainings)", color=TITLE_COLOR, fontsize=9)
         ax.set_xlabel("trials learned from", color=TEXT_COLOR)
     axes[0].set_ylabel("tracking error (mm)", color=TEXT_COLOR)

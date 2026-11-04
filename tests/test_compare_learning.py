@@ -72,6 +72,21 @@ def test_the_comparison_draws_the_arms_against_the_pds(config: dict[str, Any], r
     assert (run_dir / "learning.png").stat().st_size > 0
 
 
+def test_the_trials_axis_is_linear_unless_log():
+    assert compare_learning.trials_axis({}) == "linear"
+    assert compare_learning.trials_axis({"plot": {"trials": "log"}}) == "log"
+    with pytest.raises(ValueError, match="unknown axis of the trials"):
+        compare_learning.trials_axis({"plot": {"trials": "logarithmic"}})
+
+
+def test_a_log_trials_axis_still_shows_the_evaluation_before_learning():
+    fig = compare_learning.plot_learning([arm(["improved"], [0.05], [0.04])], [], "title", log_trials=True)
+
+    (ax,) = fig.axes
+    assert ax.get_xscale() == "symlog"
+    assert ax.get_xlim() == (0.0, 10.0)  # from before learning to the last evaluation
+
+
 def test_a_marked_pd_must_be_in_the_grid(config: dict[str, Any], run_runner: Runner):
     config["reach"]["duration"] = 0.3
     grid = run_runner(pd_grid.main, config | {"sweep": {"command.omega": [5.0], "command.damping_ratio": [0.7]}})
