@@ -53,6 +53,7 @@ training, with no seeds.
 | --- | --- | --- |
 | `tune.toml` | `learn_feedforward.py` | tuning: 4 forgetting factors (0.99 to 1) by 4 values of `delta` (0.1 to 100), 100 trials |
 | `final.toml` | `learn_feedforward.py` | the final run: a forgetting factor of 0.9999 and a `delta` of 10, 1,000 trials |
+| `compare_final.toml` | `compare_learning.py` | the final run against the decorrelated rule's runs of 10,000 trials in `feedback_from_scratch`, the PD alone, and PDs of its grid |
 
 ```bash
 uv run python experiments/learn_feedforward.py experiments/feedback_error_learning/<configuration>.toml --workers 16
