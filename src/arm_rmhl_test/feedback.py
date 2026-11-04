@@ -55,13 +55,15 @@ class Training:
     Attributes
     ----------
     errors : Array
-        The tracking error of each exploring reach, whose negative was its reward;
-        ``inf`` for the reach that diverged and ``nan`` for those never run.
+        The tracking error of each reach learned from, an exploring reach whose
+        negative was its reward in reward-modulated learning; ``inf`` for the reach
+        that diverged and ``nan`` for those never run.
     evaluated_at : Array
-        The number of trials learned from before each noise-free evaluation, from 0
-        (before learning) to ``trials``.
+        The number of trials learned from before each evaluation, from 0 (before
+        learning) to ``trials``.
     evaluations : Array
-        The tracking error of each noise-free reach; ``nan`` for those never run.
+        The tracking error of each evaluation, a reach without noise that learns
+        nothing; ``nan`` for those never run.
     weights : Array
         The readout's weights at each evaluation; shape ``(evaluations, features + 1, joints)``,
         the bias in the last row; ``nan`` for those never reached.
@@ -250,16 +252,30 @@ def learn(config: Mapping[str, Any]) -> Training:
 def summarize(training: Training) -> dict[str, Any]:
     """How a training went, as one row of a table.
 
-    The row holds the noise-free tracking errors (m) of the PD alone, before
-    learning (``pd_error_m``), at the end (``final_error_m``), and the lowest of all
-    evaluations (``best_error_m``) with the trials learned from before it
-    (``best_after``); the ``outcome``: ``"diverged"`` if the arm diverged,
-    ``"improved"`` if the final error is below the PD's, and ``"worse"`` if not;
-    why the arm diverged (``diverged``, empty if it did not); and the final gains of
+    The row holds the course of :func:`summarize_course`, then the final gains of
     the feedback torque, the weights times the scale: ``stiffness_<i><k>`` (N m/rad)
     and ``damping_<i><k>`` (N m s/rad), the torque on joint ``i`` per error of joint
-    ``k``, and ``constant_<i>`` (N m). After a divergence, the final error and gains
-    are ``nan``.
+    ``k``, and ``constant_<i>`` (N m). After a divergence, the gains are ``nan``.
+    """
+    row = summarize_course(training)
+    stiffness, damping, constant = split_weights(training.scale * training.weights[-1])
+    joints = len(constant)
+    for name, gains in (("stiffness", stiffness), ("damping", damping)):
+        row |= {f"{name}_{i + 1}{k + 1}": float(gains[i, k]) for i in range(joints) for k in range(joints)}
+    row |= {f"constant_{i + 1}": float(constant[i]) for i in range(joints)}
+    return row
+
+
+def summarize_course(training: Training) -> dict[str, Any]:
+    """How a training's evaluations went, as the first columns of a row.
+
+    The row holds the evaluations' tracking errors (m) of the PD alone, before
+    learning (``pd_error_m``), at the end (``final_error_m``), and the lowest of all
+    (``best_error_m``) with the trials learned from before it (``best_after``); the
+    ``outcome``: ``"diverged"`` if the arm diverged, ``"improved"`` if the final
+    error is below the PD's, and ``"worse"`` if not; and why the arm diverged
+    (``diverged``, empty if it did not). After a divergence, the final error is
+    ``nan``.
     """
     evaluations = training.evaluations
     completed = np.where(np.isfinite(evaluations), evaluations, np.nan)
@@ -276,10 +292,4 @@ def summarize(training: Training) -> dict[str, Any]:
     else:
         best = int(np.nanargmin(completed))
         row |= {"best_error_m": float(completed[best]), "best_after": int(training.evaluated_at[best])}
-    row |= {"outcome": outcome, "diverged": training.diverged or ""}
-    stiffness, damping, constant = split_weights(training.scale * training.weights[-1])
-    joints = len(constant)
-    for name, gains in (("stiffness", stiffness), ("damping", damping)):
-        row |= {f"{name}_{i + 1}{k + 1}": float(gains[i, k]) for i in range(joints) for k in range(joints)}
-    row |= {f"constant_{i + 1}": float(constant[i]) for i in range(joints)}
-    return row
+    return row | {"outcome": outcome, "diverged": training.diverged or ""}
