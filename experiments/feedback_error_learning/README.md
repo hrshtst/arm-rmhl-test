@@ -66,6 +66,10 @@ Under `results/feedback_error_learning/` in the storage root, all current.
 | Run | Result |
 | --- | --- |
 | `20261104-151717-tune` | 12 of 16 settings improve on the PD alone. The closest at 100 trials is a forgetting factor of 0.9999 with a `delta` of 10: 3.8 mm, still falling. At 0.999, every `delta` settles at 4.6 mm, after a best of 3.5 to 4.6 mm on the way. At 0.99, every `delta` reaches 3.5 to 5.3 mm within 10 trials, then runs away to 719 mm within 20, raising nothing. Without forgetting, the error falls more slowly: 6.0 to 59.9 mm at 100 trials. |
+| `20261104-152149-final` | Improves, to 3.7 mm at 119 trials, then settles at 4.6 mm by trial 300 and stays: 4.57 to 4.58 mm over the last 100 trials. |
+| `20261104-154044-compare_final` | The final run against the decorrelated rule's runs of 10,000 trials and the PDs; report 002's figure. |
 
 A tuning training of 100 trials took 2.5 to 3 minutes with 16 running at once,
-about 0.85 s per trial, its evaluations included.
+about 0.85 s per trial, its evaluations included; the final training, 18 minutes
+alone. Report [002](../../reports/002-feedback-error-learning/README.md) copies the
+runs and reads them.

@@ -1,0 +1,6 @@
+config = "experiments/feedback_error_learning/compare_final.toml"
+command = "experiments/compare_learning.py experiments/feedback_error_learning/compare_final.toml"
+started = 2026-11-04 15:40:44+09:00
+host = "delbosque"
+commit = "adda457a831d1286efeb7f9f4940df93003c9650"
+uncommitted_changes = false

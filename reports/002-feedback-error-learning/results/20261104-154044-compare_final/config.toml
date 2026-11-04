@@ -1,0 +1,21 @@
+# The final run of feedback-error learning against the decorrelated rule's runs of
+# 10,000 trials in feedback_from_scratch (report 001), and PDs of its grid.
+
+[[arm]]
+run = "results/feedback_error_learning/20261104-152149-final"
+label = "feedback-error learning, RLS"
+
+[[arm]]
+run = "results/feedback_from_scratch/20261104-002706-long_decorrelated_raw"
+label = "RMHL decorrelated, raw torque"
+
+[[arm]]
+run = "results/feedback_from_scratch/20261104-002706-long_decorrelated_inertia"
+label = "RMHL decorrelated, inertia-scaled"
+
+[pd]
+run = "results/feedback_from_scratch/20261103-210822-pd_grid"
+marks = [[20.0, 0.7], [28.0, 0.7], [40.0, 0.4]]  # rad/s and damping ratio
+
+[plot]
+trials = "log"  # feedback-error learning converges in tens of trials, RMHL in thousands

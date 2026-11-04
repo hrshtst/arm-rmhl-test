@@ -14,7 +14,10 @@ with [skelarm](https://github.com/hrshtst/skelarm).
 > **Status:** report [001](reports/001-feedback-from-scratch/README.md) answers
 > RQ1 for one reach: the decorrelated rule learns feedback from scratch on every
 > seed, to 6 to 9 mm against the weak PD's 170 mm, and to 4 to 6 mm in 10,000
-> reaches; the plain rule's gains run away on half of its seeds.
+> reaches; the plain rule's gains run away on half of its seeds. Report
+> [002](reports/002-feedback-error-learning/README.md) gives it a supervised
+> baseline: feedback-error learning with an RLS readout learns a feedforward to
+> 3.8 mm in 100 reaches and settles at 4.6 mm.
 
 ## Motivation
 
@@ -205,6 +208,7 @@ Each report has five parts:
 | Report | Question | Answer, in short |
 | --- | --- | --- |
 | [001 Feedback from scratch](reports/001-feedback-from-scratch/README.md) | RQ1: can RMHL learn feedback for a weak PD from one reward per reach? | Yes with the decorrelated rule, to 6 to 9 mm in 3,000 reaches and 4 to 6 mm in 10,000 on every seed, inertia-scaled with a chattering torque; the plain rule's gains run away on half of its seeds. |
+| [002 Feedback-error learning](reports/002-feedback-error-learning/README.md) | RQ1's supervised baseline: how fast and how close does an online learner given a target torque every control period come? | Feedback-error learning with an RLS readout passes the 20- and 28-rad/s PDs after 25 and 53 reaches, against 1,020 to 7,280 for RMHL, with the least effort, and settles at 4.6 mm, near the 4.2 mm of the best linear fit of the needed torque. |
 
 ## Dependencies
 

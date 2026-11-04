@@ -1,0 +1,6 @@
+config = "experiments/feedback_error_learning/final.toml"
+command = "experiments/learn_feedforward.py experiments/feedback_error_learning/final.toml"
+started = 2026-11-04 15:21:49+09:00
+host = "delbosque"
+commit = "99a688fa1462ea5c13aad4b2817b162b109d86b1"
+uncommitted_changes = false
