@@ -44,6 +44,17 @@ def test_the_reference_moves_from_rest_to_the_target_and_holds_it(config: dict[s
     np.testing.assert_allclose(reach.hand_ref, hand_positions(arm, reach.q_ref))
 
 
+def test_the_reference_accelerations_are_the_derivative_of_its_velocities(config: dict[str, Any]):
+    reach = make_reach(config, make_arm(config))
+
+    # The minimum-jerk move starts and ends at rest, without acceleration, and holds still after.
+    np.testing.assert_allclose(reach.ddq_ref[[0, 100]], 0.0, atol=1e-12)
+    np.testing.assert_array_equal(reach.ddq_ref[101:], 0.0)
+    # Central differences of the velocities over the move.
+    differences = (reach.dq_ref[2:101] - reach.dq_ref[:99]) / (2 * reach.period)
+    np.testing.assert_allclose(reach.ddq_ref[1:100], differences, atol=2e-3 * np.abs(reach.ddq_ref).max())
+
+
 def test_a_target_out_of_reach_is_refused(config: dict[str, Any]):
     config["reach"]["target"] = [1.0, 0.5]  # the arm is 0.9 m long
 

@@ -41,9 +41,10 @@ class Reach:
 
     Attributes
     ----------
-    q_ref, dq_ref : Array
-        The reference joint angles (rad) and velocities (rad/s) at the times
-        ``k * period``, ``k = 0, ..., steps``; shape ``(steps + 1, joints)``.
+    q_ref, dq_ref, ddq_ref : Array
+        The reference joint angles (rad), velocities (rad/s), and accelerations
+        (rad/s^2) at the times ``k * period``, ``k = 0, ..., steps``; shape
+        ``(steps + 1, joints)``.
     hand_ref : Array
         Where the reference puts the hand at those times (m); shape ``(steps + 1, 2)``.
     period : float
@@ -54,6 +55,7 @@ class Reach:
 
     q_ref: Array
     dq_ref: Array
+    ddq_ref: Array
     hand_ref: Array
     period: float
     simulator: Simulator
@@ -135,7 +137,8 @@ def make_reach(config: Mapping[str, Any], arm: Skeleton) -> Reach:
     samples = [trajectory.sample(k * period) for k in range(steps + 1)]
     q_ref = np.array([sample[0] for sample in samples])
     dq_ref = np.array([sample[1] for sample in samples])
-    return Reach(q_ref, dq_ref, hand_positions(arm, q_ref), period, simulator)
+    ddq_ref = np.array([sample[2] for sample in samples])
+    return Reach(q_ref, dq_ref, ddq_ref, hand_positions(arm, q_ref), period, simulator)
 
 
 def hand_positions(arm: Skeleton, postures: Array) -> Array:
