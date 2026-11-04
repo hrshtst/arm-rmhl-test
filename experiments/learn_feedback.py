@@ -30,6 +30,8 @@ feedback. The run directory receives:
 
 With ``--workers``, the combinations are spread over that many processes, each
 computing with one thread; their results are the same as in one process.
+
+:func:`run_sweep` does the work for this runner and for ``learn_feedforward.py``.
 """
 
 from __future__ import annotations
@@ -39,7 +41,7 @@ import csv
 import math
 import multiprocessing
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -69,8 +71,21 @@ SPARSE = FuncFormatter(
 )
 
 
+Learner = Callable[[dict[str, Any]], tuple[Training, float]]  # a training and the seconds it took
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    run_sweep(__doc__ or "", timed_learn, summarize, "Feedback learned")
+
+
+def run_sweep(description: str, learner: Learner, summarizer: Callable[[Training], dict[str, Any]], title: str) -> None:
+    """Train with ``learner`` on every combination of the configuration named on the command line, and record them.
+
+    The learner must be a module-level function, so that worker processes can run it;
+    each row of ``runs.csv`` holds the ``summarizer``'s summary, and the figure is
+    titled ``title``.
+    """
+    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("config", type=Path, help="configuration file (TOML)")
     parser.add_argument(
         "--workers", type=int, default=1, help="worker processes, of one thread each (default 1: in this process)"
@@ -86,9 +101,9 @@ def main() -> None:
     rows: list[dict[str, Any]] = []
     trainings: list[Training] = []
     for k, ((values, _), (training, seconds)) in enumerate(
-        zip(combinations, learn_all([variant for _, variant in combinations], args.workers), strict=True)
+        zip(combinations, learn_all([variant for _, variant in combinations], args.workers, learner), strict=True)
     ):
-        row = values | summarize(training) | {"seconds": seconds}
+        row = values | summarizer(training) | {"seconds": seconds}
         rows.append(row)
         trainings.append(training)
         label = ", ".join(f"{name}={_format(value)}" for name, value in values.items()) or "the configuration"
@@ -111,9 +126,7 @@ def main() -> None:
         weights=np.array([t.weights for t in trainings]),
         scale=np.array([t.scale for t in trainings]),
     )
-    plot_learning(combinations, trainings, f"Feedback learned: {args.config.stem}").savefig(
-        run_dir / "learning.png", dpi=150
-    )
+    plot_learning(combinations, trainings, f"{title}: {args.config.stem}").savefig(run_dir / "learning.png", dpi=150)
     outcomes = {
         outcome: sum(row["outcome"] == outcome for row in rows) for outcome in ("improved", "worse", "diverged")
     }
@@ -121,14 +134,14 @@ def main() -> None:
     print(f"Wrote the results to {run_dir}")
 
 
-def learn_all(configs: list[dict[str, Any]], workers: int) -> Iterator[tuple[Training, float]]:
-    """Train on each configuration, in order, in this process or over ``workers`` processes."""
+def learn_all(configs: list[dict[str, Any]], workers: int, learner: Learner) -> Iterator[tuple[Training, float]]:
+    """Train with ``learner`` on each configuration, in order, in this process or over ``workers`` processes."""
     if workers == 1:
-        yield from map(timed_learn, configs)
+        yield from map(learner, configs)
         return
     # Many processes of one thread each (arm_rmhl_test sets OMP_NUM_THREADS=1 as each imports it).
     with ProcessPoolExecutor(workers, mp_context=multiprocessing.get_context("spawn")) as pool:
-        yield from pool.map(timed_learn, configs)
+        yield from pool.map(learner, configs)
 
 
 def timed_learn(config: dict[str, Any]) -> tuple[Training, float]:
