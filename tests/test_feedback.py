@@ -13,6 +13,7 @@ from skelarm.dynamics import compute_mass_matrix
 from arm_rmhl_test.arm import command_gains, make_arm, make_reach, run_reach, tracking_error
 from arm_rmhl_test.feedback import (
     Training,
+    evaluation_trials,
     feedback_gains,
     feedback_scale,
     learn,
@@ -141,10 +142,34 @@ def test_a_diverging_arm_stops_the_training_and_is_recorded(setup):
     assert np.all(np.isnan(training.errors))
 
 
+def test_training_can_evaluate_every_trial_of_its_start(setup):
+    arm, reach, kp, kd = setup
+    model = make_model(make_rule(RULE), arm.num_joints)
+
+    training = train(model, arm, reach, kp, kd, trials=7, dead_zone=0.0, evaluate_every=3, evaluate_all_until=2)
+
+    np.testing.assert_array_equal(training.evaluated_at, [0, 1, 2, 3, 6, 7])
+    assert np.all(np.isfinite(training.evaluations))
+
+
+def test_evaluations_come_at_the_start_every_trial_until_a_point_then_every_few_and_at_the_end():
+    np.testing.assert_array_equal(evaluation_trials(10, 4), [0, 4, 8, 10])
+    np.testing.assert_array_equal(evaluation_trials(10, 4, 5), [0, 1, 2, 3, 4, 5, 8, 10])
+    np.testing.assert_array_equal(evaluation_trials(3, 20, 100), [0, 1, 2, 3])  # never past the end
+    np.testing.assert_array_equal(evaluation_trials(200, 20, 0), np.append(np.arange(0, 200, 20), 200))
+
+
 def test_the_training_table_gives_the_settings_of_train():
     config = {"training": {"trials": 1000, "dead_zone": 0.0, "evaluate_every": 20}}
 
-    assert training_settings(config) == {"trials": 1000, "dead_zone": 0.0, "evaluate_every": 20}
+    assert training_settings(config) == {
+        "trials": 1000,
+        "dead_zone": 0.0,
+        "evaluate_every": 20,
+        "evaluate_all_until": 0,  # by default, no trial is evaluated for being early
+    }
+    config["training"]["evaluate_all_until"] = 100
+    assert training_settings(config)["evaluate_all_until"] == 100
 
 
 def test_learning_from_a_configuration_trains_a_fresh_model(setup, config: dict[str, Any]):

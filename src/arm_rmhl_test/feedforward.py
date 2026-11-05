@@ -41,7 +41,7 @@ from rclib import ESN, readouts, reservoirs
 from skelarm import Skeleton
 
 from arm_rmhl_test.arm import Array, Reach, ReachRun, command_gains, make_arm, make_reach, run_reach, tracking_error
-from arm_rmhl_test.feedback import Training, summarize_course, training_settings
+from arm_rmhl_test.feedback import Training, evaluation_trials, summarize_course, training_settings
 
 SIGNALS = 3  # the reference's angle, velocity, and acceleration, per joint
 
@@ -134,17 +134,20 @@ def train(
     trials: int,
     dead_zone: float,
     evaluate_every: int,
+    evaluate_all_until: int = 0,
 ) -> Training:
     """Learn from ``trials`` reaches, with reaches that learn nothing between to evaluate the weights.
 
-    A reach with the weights as they stand is evaluated before the first trial,
-    after every ``evaluate_every`` trials, and after the last. When the arm
+    A reach with the weights as they stand is evaluated at the trials of
+    :func:`arm_rmhl_test.feedback.evaluation_trials`: before the first trial, after
+    every trial up to ``evaluate_all_until``, after every ``evaluate_every`` trials,
+    and after the last. When the arm
     diverges, which rclib or skelarm reports by raising (see :func:`run_trial`), the
     run stops there and records why. The training's scale is 1: the readout's output
     is the torque.
     """
     joints = arm.num_joints
-    evaluated_at = np.unique(np.append(np.arange(0, trials, evaluate_every), trials))
+    evaluated_at = evaluation_trials(trials, evaluate_every, evaluate_all_until)
     evaluation_row = {int(trial): row for row, trial in enumerate(evaluated_at)}
     errors = np.full(trials, np.nan)
     evaluations = np.full(len(evaluated_at), np.nan)

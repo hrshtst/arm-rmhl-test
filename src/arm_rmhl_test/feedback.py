@@ -27,8 +27,10 @@ A configuration sets the feedback, the rule and the training in three tables:
   ``Baseline``), and any other setting of ``RewardModulatedHebbian`` to override. An
   optional setting set to ``false`` is turned off: ``decorrelation = false`` gives the
   plain rule where ``burms2015`` is decorrelated.
-- ``[training]``: the number of ``trials``, the reward's ``dead_zone`` (m), and how
-  often a noise-free reach is evaluated, ``evaluate_every`` trials.
+- ``[training]``: the number of ``trials``, the reward's ``dead_zone`` (m), how
+  often a noise-free reach is evaluated, ``evaluate_every`` trials, and optionally
+  ``evaluate_all_until``, a trial up to which every trial is also evaluated (see
+  :func:`evaluation_trials`).
 """
 
 from __future__ import annotations
@@ -193,19 +195,21 @@ def train(
     trials: int,
     dead_zone: float,
     evaluate_every: int,
+    evaluate_all_until: int = 0,
     scale: Array | None = None,
 ) -> Training:
     """Learn from ``trials`` exploring reaches, one reward each, with noise-free evaluations between.
 
     The feedback torque is the model's output times ``scale``, 1 by default. A
-    noise-free reach is evaluated before the first trial, after every
+    noise-free reach is evaluated at the trials of :func:`evaluation_trials`: before
+    the first trial, after every trial up to ``evaluate_all_until``, after every
     ``evaluate_every`` trials, and after the last. When the arm diverges, which
     rclib or skelarm reports by raising (see :func:`run_trial`), the run stops
     there, as in rclib's body-control example, and records why.
     """
     joints = arm.num_joints
     scale = np.ones(joints) if scale is None else np.asarray(scale, dtype=np.float64)
-    evaluated_at = np.unique(np.append(np.arange(0, trials, evaluate_every), trials))
+    evaluated_at = evaluation_trials(trials, evaluate_every, evaluate_all_until)
     evaluation_row = {int(trial): row for row, trial in enumerate(evaluated_at)}
     errors = np.full(trials, np.nan)
     evaluations = np.full(len(evaluated_at), np.nan)
@@ -230,6 +234,17 @@ def train(
     return Training(errors, evaluated_at, evaluations, weights, scale, diverged)
 
 
+def evaluation_trials(trials: int, evaluate_every: int, evaluate_all_until: int = 0) -> Array:
+    """The numbers of trials learned from before each evaluation, in order.
+
+    They are 0, before learning; every trial up to ``evaluate_all_until``, to follow
+    a fast start closely; every multiple of ``evaluate_every``; and ``trials``, the
+    end.
+    """
+    every_trial = np.arange(min(evaluate_all_until, trials) + 1)
+    return np.unique(np.concatenate((every_trial, np.arange(0, trials, evaluate_every), [trials])))
+
+
 def training_settings(config: Mapping[str, Any]) -> dict[str, Any]:
     """The keyword arguments of :func:`train` from the ``[training]`` table."""
     table = config["training"]
@@ -237,6 +252,7 @@ def training_settings(config: Mapping[str, Any]) -> dict[str, Any]:
         "trials": int(table["trials"]),
         "dead_zone": float(table["dead_zone"]),
         "evaluate_every": int(table["evaluate_every"]),
+        "evaluate_all_until": int(table.get("evaluate_all_until", 0)),
     }
 
 
