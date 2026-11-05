@@ -77,6 +77,12 @@ skelarm raised.
 | `tune_staged_inertia_round3.toml` | `learn_combined.py` | the feedback's round 2 past its edge, inertia-scaled, staged: a learning rate of 5,000 with 0.8 rad/s^2 |
 | `tune_readout_concurrent_raw.toml` | `learn_combined.py` | the feedforward's round, raw torque, concurrent, the feedback at 80 and 0.32 N m: the same grid |
 | `tune_readout_staged_inertia.toml` | `learn_combined.py` | the feedforward's round, inertia-scaled, staged, the feedback at 5,000 and 0.25 rad/s^2: the same grid |
+| `tune_concurrent_raw_round4.toml` | `learn_combined.py` | the feedback again, raw torque, concurrent, with the feedforward's new best (0.9999, 100): learning rates 25, 80, and 250 by amplitudes 0.1, 0.32, and 1 N m |
+| `final_staged_raw.toml` | `learn_combined.py` | the final runs, raw torque, staged: the tuned setting on seeds 1 to 5, 10,000 trials |
+| `final_concurrent_inertia.toml` | `learn_combined.py` | the final runs, inertia-scaled, concurrent: likewise |
+| `final_staged_inertia.toml` | `learn_combined.py` | the final runs, inertia-scaled, staged: likewise |
+| `final_feedback_alone_inertia.toml` | `learn_combined.py` | ablation: `final_concurrent_inertia.toml` without its feedforward, seeds 1 to 5 |
+| `final_feedforward_alone.toml` | `learn_combined.py` | ablation: `final_concurrent_inertia.toml` without its feedback, report 002's setting, once |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/combined_learning/<configuration>.toml --workers 20
@@ -95,6 +101,18 @@ the noise-free tracking errors at 1,000 trials on seed 0.
 | `20261105-211104-tune_staged_inertia_round2` | 8 of 9 improve. The closest is 5,000 with 0.25 rad/s^2, 1.44 mm, on this grid's edge in amplitude. 16,000 with 0.25 rad/s^2 runs away, to 823 mm. Round 1's best, repeated, comes out bit for bit the same. |
 | `20261105-211936-tune_readout_staged_raw` | 12 of 16 improve. The closest is report 002's setting, a forgetting factor of 0.9999 with a `delta` of 10, 2.29 mm, bit for bit round 1's run; next, 0.9999 with 1, 2.63 mm. At 0.99, every `delta` runs away within 10 trials, to 719 mm. |
 | `20261105-212835-tune_readout_concurrent_inertia` | 2 of 16 improve: report 002's setting, 1.38 mm, bit for bit round 1's run, and 1 with 10, 2.99 mm. The other `delta` values run away at forgetting factors of 1 and 0.9999, and every one at 0.999, to 602 to 942 mm, raising nothing; at 0.99, rclib raises within 2 trials (`inputs must be finite`). |
+| `20261105-213923-tune_staged_inertia_round3` | 5,000 with 0.8 rad/s^2 runs away, to 786 mm: 5,000 with 0.25 rad/s^2 stays the closest. |
+| `20261105-213923-tune_readout_concurrent_raw` | 4 of 16 improve. The closest is a forgetting factor of 0.9999 with a `delta` of 100, 1.45 mm, ahead of report 002's setting, 1.62 mm, bit for bit round 1's run; over the evaluations from 800 to 1,000 trials, though, their means are 1.77 and 1.70 mm. 8 run away to 546 to 719 mm; at 0.99, rclib raises. The best is on the grid's edge in `delta`; the grid is not extended, as the protocol's round for the feedforward is report 002's grid, and at 1,000 trials the effect of `delta` is within the swing between evaluations. |
+| `20261105-213923-tune_readout_staged_inertia` | 3 of 16 improve. The closest is report 002's setting, 1.44 mm, bit for bit round 2's run; the other 13 run away, to 687 to 816 mm, raising nothing. |
+
+The tuned settings, apart from raw torque with the concurrent schedule, which waits
+on round 4:
+
+| Variant | Feedback: learning rate, amplitude | Feedforward: forgetting factor, `delta` | Error at 1,000 trials, seed 0 |
+| --- | --- | --- | --- |
+| raw torque, staged | 8, 0.32 N m | 0.9999, 10 | 2.29 mm |
+| inertia-scaled, concurrent | 160, 2.5 rad/s^2 | 0.9999, 10 | 1.38 mm |
+| inertia-scaled, staged | 5,000, 0.25 rad/s^2 | 0.9999, 10 | 1.44 mm |
 
 The error swings between evaluations 20 trials apart. After 200 trials, the largest
 swing of an improving setting is at most 5.9 mm (raw) and 4.2 mm
