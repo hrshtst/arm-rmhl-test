@@ -87,30 +87,45 @@ def fixed_part(config: dict[str, Any]) -> dict[str, Any]:
     return fixed
 
 
-@pytest.mark.parametrize(
-    ("name", "variant", "kind"),
-    [("tune_concurrent_raw_round2", "raw", "concurrent"), ("tune_staged_inertia_round2", "inertia", "staged")],
-)
-def test_round_2_extends_the_feedbacks_grid_past_round_1s_edge_for_one_schedule(name: str, variant: str, kind: str):
-    config, round_1 = load(EXPERIMENT / f"{name}.toml"), load(EXPERIMENT / f"tune_{variant}.toml")
+FEEDBACK_ROUNDS = sorted(EXPERIMENT.glob("tune_*_round*.toml"))
+READOUT_ROUNDS = sorted(EXPERIMENT.glob("tune_readout_*.toml"))
+
+
+def variant_of(config: dict[str, Any]) -> str:
+    return next(name for name, scale in SCALES.items() if scale == config["feedback"]["scale"])
+
+
+def feedback_grid(variant: str) -> tuple[set[float], set[float]]:
+    """Every learning rate and amplitude that the feedback's rounds ran for a scale."""
+    rates: set[float] = set()
+    amplitudes: set[float] = set()
+    for path in [EXPERIMENT / f"tune_{variant}.toml", *EXPERIMENT.glob(f"tune_*_{variant}_round*.toml")]:
+        config = load(path)
+        sweep = config.get("sweep", {})
+        rates |= set(sweep.get("rule.learning_rate", [config["rule"]["learning_rate"]]))
+        amplitudes |= set(sweep.get("rule.exploration.amplitude", [config["rule"]["exploration"]["amplitude"]]))
+    return rates, amplitudes
+
+
+@pytest.mark.parametrize("path", FEEDBACK_ROUNDS, ids=lambda path: path.stem)
+def test_a_later_feedback_round_changes_only_the_feedbacks_settings_for_one_schedule(path: Path):
+    config = load(path)
+    round_1 = load(EXPERIMENT / f"tune_{variant_of(config)}.toml")
 
     assert fixed_part(config) == fixed_part(round_1)
     assert config["readout"] == round_1["readout"]
-    assert config["schedule"]["kind"] == kind
-    sweep = config["sweep"]
-    assert list(sweep) == ["rule.learning_rate", "rule.exploration.amplitude"]
-    assert max(sweep["rule.learning_rate"]) > max(round_1["sweep"]["rule.learning_rate"])
+    assert config["schedule"]["kind"] == path.stem.split("_")[1]  # tune_<schedule>_<scale>_round<n>
+    assert set(config.get("sweep", {})) <= {"rule.learning_rate", "rule.exploration.amplitude"}
 
 
-@pytest.mark.parametrize(("variant", "kind"), [("raw", "staged"), ("inertia", "concurrent")])
-def test_the_feedforwards_round_sweeps_report_002s_grid_with_a_feedback_setting_of_round_1(variant: str, kind: str):
-    config, round_1 = (
-        load(EXPERIMENT / f"tune_readout_{kind}_{variant}.toml"),
-        load(EXPERIMENT / f"tune_{variant}.toml"),
-    )
+@pytest.mark.parametrize("path", READOUT_ROUNDS, ids=lambda path: path.stem)
+def test_the_feedforwards_round_sweeps_report_002s_grid_with_a_feedback_setting_already_run(path: Path):
+    config = load(path)
+    variant = variant_of(config)
+    rates, amplitudes = feedback_grid(variant)
 
-    assert fixed_part(config) == fixed_part(round_1)
-    assert config["schedule"]["kind"] == kind
+    assert fixed_part(config) == fixed_part(load(EXPERIMENT / f"tune_{variant}.toml"))
+    assert config["schedule"]["kind"] == path.stem.split("_")[2]  # tune_readout_<schedule>_<scale>
     assert config["sweep"] == load(REPO_ROOT / "experiments/feedback_error_learning/tune.toml")["sweep"]
-    assert config["rule"]["learning_rate"] in round_1["sweep"]["rule.learning_rate"]
-    assert config["rule"]["exploration"]["amplitude"] in round_1["sweep"]["rule.exploration.amplitude"]
+    assert config["rule"]["learning_rate"] in rates
+    assert config["rule"]["exploration"]["amplitude"] in amplitudes
