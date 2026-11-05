@@ -40,7 +40,17 @@ import numpy as np
 from rclib import ESN, readouts, reservoirs
 from skelarm import Skeleton
 
-from arm_rmhl_test.arm import Array, Reach, ReachRun, command_gains, make_arm, make_reach, run_reach, tracking_error
+from arm_rmhl_test.arm import (
+    Array,
+    Feedback,
+    Reach,
+    ReachRun,
+    command_gains,
+    make_arm,
+    make_reach,
+    run_reach,
+    tracking_error,
+)
 from arm_rmhl_test.feedback import Training, evaluation_trials, summarize_course, training_settings
 
 SIGNALS = 3  # the reference's angle, velocity, and acceleration, per joint
@@ -83,9 +93,38 @@ def run_frozen(
     weights: Array, arm: Skeleton, reach: Reach, kp: Array, kd: Array, dead_zone: float
 ) -> tuple[float, ReachRun]:
     """One reach under the PD and the feedforward of fixed weights; return its tracking error and the run."""
-    torques = iter(reference_inputs(reach) @ weights[:-1] + weights[-1])
-    run = run_reach(arm, reach, kp, kd, lambda _error: next(torques))
+    run = run_reach(arm, reach, kp, kd, frozen_feedforward(weights, reach))
     return tracking_error(run, reach, dead_zone), run
+
+
+def frozen_feedforward(weights: Array, reach: Reach) -> Feedback:
+    """The feedforward torque of one reach, from its start, with fixed weights: each period, the reference's."""
+    torques = iter(reference_inputs(reach) @ weights[:-1] + weights[-1])
+    return lambda _error: next(torques)
+
+
+def learning_feedforward(model: ESN, reach: Reach, kp: Array, kd: Array) -> Feedback:
+    """The feedforward torque of one reach that learns, from its start.
+
+    The model's reservoir is reset. Each control period, the readout gives the
+    feedforward from the reference, then fits, as its target, that feedforward plus
+    the PD's torque, ``kp`` times the angle error plus ``kd`` times the velocity
+    error, so the next period's feedforward comes from the updated weights.
+    """
+    joints = len(kp)
+    model.reset_reservoirs()
+    inputs = iter(reference_inputs(reach))
+
+    def feedforward(error: Array) -> Array:
+        x = next(inputs).reshape(1, -1)
+        fitted = model.get_readout().getInputDim() > 0
+        torque = np.asarray(model.predict_online(x))[0] if fitted else np.zeros(joints)
+        target = torque + kp * error[:joints] + kd * error[joints:]
+        # Before the first fit, the fit itself passes the input to the NVAR.
+        model.partial_fit(None if fitted else x, target.reshape(1, -1))
+        return torque
+
+    return feedforward
 
 
 def run_trial(
@@ -105,22 +144,9 @@ def run_trial(
         When the arm diverges: rclib raises on a non-finite fit, and skelarm's
         kinematics raise ``OverflowError`` on a torque too large for them.
     """
-    joints = arm.num_joints
     if not learn:
-        return run_frozen(readout_weights(model, joints), arm, reach, kp, kd, dead_zone)
-    model.reset_reservoirs()
-    inputs = iter(reference_inputs(reach))
-
-    def feedforward(error: Array) -> Array:
-        x = next(inputs).reshape(1, -1)
-        fitted = model.get_readout().getInputDim() > 0
-        torque = np.asarray(model.predict_online(x))[0] if fitted else np.zeros(joints)
-        target = torque + kp * error[:joints] + kd * error[joints:]
-        # Before the first fit, the fit itself passes the input to the NVAR.
-        model.partial_fit(None if fitted else x, target.reshape(1, -1))
-        return torque
-
-    run = run_reach(arm, reach, kp, kd, feedforward)
+        return run_frozen(readout_weights(model, arm.num_joints), arm, reach, kp, kd, dead_zone)
+    run = run_reach(arm, reach, kp, kd, learning_feedforward(model, reach, kp, kd))
     return tracking_error(run, reach, dead_zone), run
 
 

@@ -45,7 +45,17 @@ from rclib import ESN, learning, readouts, reservoirs
 from skelarm import Skeleton
 from skelarm.dynamics import compute_mass_matrix
 
-from arm_rmhl_test.arm import Array, Reach, ReachRun, command_gains, make_arm, make_reach, run_reach, tracking_error
+from arm_rmhl_test.arm import (
+    Array,
+    Feedback,
+    Reach,
+    ReachRun,
+    command_gains,
+    make_arm,
+    make_reach,
+    run_reach,
+    tracking_error,
+)
 
 _OPTIONAL = {field.name for field in dataclasses.fields(learning.RewardModulatedHebbian) if field.default is None}
 
@@ -175,14 +185,24 @@ def run_trial(
         tracking error and ``RuntimeError`` when the feedback would overflow, and
         skelarm's kinematics raise ``OverflowError`` on a torque too large for them.
     """
-    model.reset_reservoirs()
     factor = np.ones(arm.num_joints) if scale is None else scale
+    run = run_reach(arm, reach, kp, kd, feedback_torque(model, factor, explore=explore))
+    return tracking_error(run, reach, dead_zone), run
+
+
+def feedback_torque(model: ESN, scale: Array, *, explore: bool) -> Feedback:
+    """The feedback torque of one reach, from its start: each control period, the model's output times ``scale``.
+
+    The model's reservoir is reset. While ``explore`` is set, every output adds the
+    noise and records the eligibility for the next ``reinforce``; otherwise no
+    learning state changes.
+    """
+    model.reset_reservoirs()
 
     def feedback(error: Array) -> Array:
-        return factor * model.act(error.reshape(1, -1), explore=explore)[0]
+        return scale * model.act(error.reshape(1, -1), explore=explore)[0]
 
-    run = run_reach(arm, reach, kp, kd, feedback)
-    return tracking_error(run, reach, dead_zone), run
+    return feedback
 
 
 def train(
