@@ -31,13 +31,16 @@ feedback. The run directory receives:
 With ``--workers``, the combinations are spread over that many processes, each
 computing with one thread; their results are the same as in one process.
 
-:func:`run_sweep` does the work for this runner and for ``learn_feedforward.py``.
+:func:`run_sweep` does the work for this runner, ``learn_feedforward.py`` and
+``learn_combined.py``; it saves every array of a training, such as the
+feedforward's weights of ``learn_combined.py``.
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
+import dataclasses
 import math
 import multiprocessing
 import time
@@ -118,14 +121,13 @@ def run_sweep(description: str, learner: Learner, summarizer: Callable[[Training
         writer = csv.DictWriter(f, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
-    np.savez_compressed(
-        run_dir / "training.npz",
-        errors=np.array([t.errors for t in trainings]),
-        evaluated_at=trainings[0].evaluated_at,
-        evaluations=np.array([t.evaluations for t in trainings]),
-        weights=np.array([t.weights for t in trainings]),
-        scale=np.array([t.scale for t in trainings]),
-    )
+    # Every array of the trainings, a row per combination; the evaluations come at the same trials in all.
+    arrays = {
+        field.name: np.array([getattr(t, field.name) for t in trainings])
+        for field in dataclasses.fields(trainings[0])
+        if field.name not in ("evaluated_at", "diverged")
+    }
+    np.savez_compressed(run_dir / "training.npz", allow_pickle=False, evaluated_at=trainings[0].evaluated_at, **arrays)
     plot_learning(combinations, trainings, f"{title}: {args.config.stem}").savefig(run_dir / "learning.png", dpi=150)
     outcomes = {
         outcome: sum(row["outcome"] == outcome for row in rows) for outcome in ("improved", "worse", "diverged")

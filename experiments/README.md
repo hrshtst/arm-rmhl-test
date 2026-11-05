@@ -18,9 +18,12 @@ The runners:
   combination of a sweep, over `--workers` processes;
 - `learn_feedforward.py` learns feedforward torques by feedback-error learning,
   from a target every control period, likewise;
+- `learn_combined.py` learns both together, the feedforward by feedback-error
+  learning and the feedback from one reward per reach, likewise; leaving out
+  either learner's table gives the other alone;
 - `compare_learning.py` draws the noise-free learning of several runs of
-  `learn_feedback.py` or `learn_feedforward.py`, normally one per rule, each over
-  its seeds, against joint PDs of a run of `pd_grid.py`.
+  `learn_feedback.py`, `learn_feedforward.py` or `learn_combined.py`, normally one
+  per rule, each over its seeds, against joint PDs of a run of `pd_grid.py`.
 
 A `[sweep]` table lists values for settings of a configuration by their dotted
 paths, such as `"rule.learning_rate" = [1.0, 3.0]`; every combination of the
