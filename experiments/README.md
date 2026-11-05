@@ -9,6 +9,7 @@ experiments and live directly in this directory.
 | --- | --- | --- | --- |
 | [`feedback_from_scratch`](feedback_from_scratch/README.md) | RQ1: feedback torques learned from zero for one reach under a weak PD, against the PD alone over a grid of gains | `pd_grid.py`, `learn_feedback.py`, `compare_learning.py` | [001](../reports/001-feedback-from-scratch/README.md) |
 | [`feedback_error_learning`](feedback_error_learning/README.md) | RQ1's supervised baseline: a feedforward learned by feedback-error learning with an RLS readout, for the same reach and weak PD | `learn_feedforward.py`, `compare_learning.py` | [002](../reports/002-feedback-error-learning/README.md) |
+| [`combined_learning`](combined_learning/README.md) | RQ1: the feedforward of feedback-error learning and the reward-modulated feedback learned together, with ablations of each, for the same reach and weak PD | `learn_combined.py`, `compare_learning.py` | to come |
 
 The runners:
 
