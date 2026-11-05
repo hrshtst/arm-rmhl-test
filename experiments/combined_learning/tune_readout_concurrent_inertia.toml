@@ -1,0 +1,76 @@
+# Tuning the feedforward for inertia-scaled feedback, concurrent schedule: RLS's
+# forgetting factor by its delta, report 002's grid, with the feedback at round 1's
+# best for this variant, a learning rate of 160 with an amplitude of 2.5 rad/s^2.
+
+# arm-esn-ctrl's v2 arm: two links in the horizontal plane, without gravity.
+[initial]
+q = [30.0, 30.0]  # deg
+
+[skeleton]
+base_length = 0.0
+
+[[skeleton.link]]
+length = 0.5
+mass = 0.5
+inertia = 0.0125
+com = [0.25, 0.0]
+limits = [-180.0, 180.0]
+
+[[skeleton.link]]
+length = 0.4
+mass = 0.4
+inertia = 0.0064
+com = [0.2, 0.0]
+limits = [-180.0, 180.0]
+
+[simulator]
+dt = 0.002
+stops = "locked"
+
+# One reach from rest: the hand to (-0.6, 0.4) m by a minimum-jerk move of 1 s, then 1 s of holding.
+[reach]
+target = [-0.6, 0.4]
+move = 1.0
+duration = 2.0
+control_period = 0.01
+
+# The weak PD that the feedforward and the feedback add to.
+[command]
+omega = 5.0  # rad/s
+damping_ratio = 0.7
+
+# The feedforward: feedback-error learning with an RLS readout, from report 002's tuned setting.
+[readout]
+forgetting = 0.9999  # the sweep replaces it
+delta = 10.0  # the covariance starts at the identity over delta; the sweep replaces it
+
+[feedback]
+scale = "inertia"  # each joint's output times its inertia: the output is in rad/s^2
+
+# burms2015: Gaussian exploration on the output, one update per trial from the
+# reward's difference from the mean of the last 50 rewards.
+[rule]
+preset = "burms2015"
+learning_rate = 160.0
+decorrelation = 1.0  # as burms2015 sets it
+
+[rule.exploration]
+distribution = "gaussian"
+amplitude = 2.5  # rad/s^2, times each joint's inertia
+seed = 0  # the tuning's seed; the final runs use 1 to 5
+
+# Concurrent: both learn from every reach. Staged: the feedforward learns from the
+# first 100 reaches, as many as report 002's tuning, then the feedback from the rest.
+[schedule]
+kind = "concurrent"
+handover = 100  # reaches; for the staged schedule only
+
+[training]
+trials = 1000  # report 001's tuning budget
+dead_zone = 0.0  # m
+evaluate_every = 20
+evaluate_all_until = 100  # every reach of the feedforward's fast start
+
+[sweep]
+"readout.forgetting" = [1.0, 0.9999, 0.999, 0.99]
+"readout.delta" = [0.1, 1.0, 10.0, 100.0]

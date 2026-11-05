@@ -47,7 +47,7 @@ def test_the_feedback_is_report_001s_decorrelated_rule(path: Path):
     config = load(path)
     if "rule" not in config:
         return
-    variant = next(name for name in SCALES if path.stem.endswith(name))
+    variant = next(name for name, scale in SCALES.items() if scale == config["feedback"]["scale"])
     reference = report_001_long(variant)
 
     assert config["feedback"] == reference["feedback"] == {"scale": SCALES[variant]}
@@ -74,3 +74,43 @@ def test_tuning_round_1_sweeps_the_feedback_for_both_schedules_with_report_002s_
     assert reference["rule"]["exploration"]["amplitude"] in sweep["rule.exploration.amplitude"]
     assert max(sweep["rule.learning_rate"]) > reference["rule"]["learning_rate"]
     assert min(sweep["rule.exploration.amplitude"]) < reference["rule"]["exploration"]["amplitude"]
+
+
+def fixed_part(config: dict[str, Any]) -> dict[str, Any]:
+    """The configuration without what tuning rounds choose: the sweep, the schedule's kind, the tuned settings."""
+    fixed = {name: table for name, table in config.items() if name not in ("sweep", "readout")}
+    fixed["schedule"] = {key: value for key, value in config["schedule"].items() if key != "kind"}
+    fixed["rule"] = {key: value for key, value in config["rule"].items() if key != "learning_rate"}
+    fixed["rule"]["exploration"] = {
+        key: value for key, value in config["rule"]["exploration"].items() if key != "amplitude"
+    }
+    return fixed
+
+
+@pytest.mark.parametrize(
+    ("name", "variant", "kind"),
+    [("tune_concurrent_raw_round2", "raw", "concurrent"), ("tune_staged_inertia_round2", "inertia", "staged")],
+)
+def test_round_2_extends_the_feedbacks_grid_past_round_1s_edge_for_one_schedule(name: str, variant: str, kind: str):
+    config, round_1 = load(EXPERIMENT / f"{name}.toml"), load(EXPERIMENT / f"tune_{variant}.toml")
+
+    assert fixed_part(config) == fixed_part(round_1)
+    assert config["readout"] == round_1["readout"]
+    assert config["schedule"]["kind"] == kind
+    sweep = config["sweep"]
+    assert list(sweep) == ["rule.learning_rate", "rule.exploration.amplitude"]
+    assert max(sweep["rule.learning_rate"]) > max(round_1["sweep"]["rule.learning_rate"])
+
+
+@pytest.mark.parametrize(("variant", "kind"), [("raw", "staged"), ("inertia", "concurrent")])
+def test_the_feedforwards_round_sweeps_report_002s_grid_with_a_feedback_setting_of_round_1(variant: str, kind: str):
+    config, round_1 = (
+        load(EXPERIMENT / f"tune_readout_{kind}_{variant}.toml"),
+        load(EXPERIMENT / f"tune_{variant}.toml"),
+    )
+
+    assert fixed_part(config) == fixed_part(round_1)
+    assert config["schedule"]["kind"] == kind
+    assert config["sweep"] == load(REPO_ROOT / "experiments/feedback_error_learning/tune.toml")["sweep"]
+    assert config["rule"]["learning_rate"] in round_1["sweep"]["rule.learning_rate"]
+    assert config["rule"]["exploration"]["amplitude"] in round_1["sweep"]["rule.exploration.amplitude"]

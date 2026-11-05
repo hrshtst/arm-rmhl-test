@@ -48,9 +48,10 @@ skelarm raised.
    combination, in alternating rounds:
    1. the feedback's learning rate by its exploration amplitude, with the
       feedforward at report 002's tuned setting (`tune_raw.toml`,
-      `tune_inertia.toml`);
+      `tune_inertia.toml`), and again past the grid's edge for a variant whose
+      best lies on it (`tune_<schedule>_<scale>_round2.toml`);
    2. the feedforward's forgetting factor by its `delta`, report 002's grid, with
-      each variant's best feedback setting;
+      each variant's best feedback setting (`tune_readout_<schedule>_<scale>.toml`);
    3. if the feedforward's best setting moved, the feedback's settings again,
       around their best.
 2. **The final runs**, on seeds 1 to 5, which the tuning never saw, for 10,000
@@ -69,6 +70,10 @@ skelarm raised.
 | --- | --- | --- |
 | `tune_raw.toml` | `learn_combined.py` | tuning round 1, raw torque: both schedules, 5 learning rates (0.8 to 80) by 4 amplitudes (0.1 to 3.2 N m), 1,000 trials |
 | `tune_inertia.toml` | `learn_combined.py` | tuning round 1, inertia-scaled: both schedules, 5 learning rates (16 to 1,600) by 4 amplitudes (0.25 to 8 rad/s^2), 1,000 trials |
+| `tune_concurrent_raw_round2.toml` | `learn_combined.py` | the feedback's round 1 past its edge, raw torque, concurrent: learning rates 250 and 800 by amplitudes 0.1, 0.32, and 1 N m |
+| `tune_staged_inertia_round2.toml` | `learn_combined.py` | the feedback's round 1 past its corner, inertia-scaled, staged: learning rates 1,600 to 16,000 by amplitudes 0.025 to 0.25 rad/s^2 |
+| `tune_readout_staged_raw.toml` | `learn_combined.py` | the feedforward's round, raw torque, staged, the feedback at 8 and 0.32 N m: 4 forgetting factors (0.99 to 1) by 4 values of `delta` (0.1 to 100) |
+| `tune_readout_concurrent_inertia.toml` | `learn_combined.py` | the feedforward's round, inertia-scaled, concurrent, the feedback at 160 and 2.5 rad/s^2: the same grid |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/combined_learning/<configuration>.toml --workers 20
@@ -76,4 +81,17 @@ uv run python experiments/learn_combined.py experiments/combined_learning/<confi
 
 ## Runs
 
-Under `results/combined_learning/` in the storage root. None yet.
+Under `results/combined_learning/` in the storage root, all current. Errors are
+the noise-free tracking errors at 1,000 trials on seed 0.
+
+| Run | Result |
+| --- | --- |
+| `20261105-203031-tune_raw` | 37 of 40 settings improve on the PD alone. Concurrent: the closest is a learning rate of 80 with an amplitude of 0.32 N m, 1.62 mm, on the grid's edge, ahead of 25 with 1 N m by 5.5e-8 m; staged: 8 with 0.32 N m, 2.29 mm. Three run away to 577 to 723 mm, raising nothing: 80 with 1 or 3.2 N m concurrent, 80 with 3.2 N m staged. |
+| `20261105-204908-tune_inertia` | 26 of 40 improve. Concurrent: the closest is 160 with 2.5 rad/s^2, 1.38 mm; staged: 1,600 with 0.25 rad/s^2, 2.00 mm, in the grid's corner and still falling. The other 14 run away to 649 to 782 mm, raising nothing, at the larger learning rates with the larger amplitudes. |
+
+The error swings between evaluations 20 trials apart. After 200 trials, the largest
+swing of an improving setting is at most 5.9 mm (raw) and 4.2 mm
+(inertia-scaled), at the larger learning rates and amplitudes, and 0.95 mm and
+0.18 mm for the median setting. The choice between settings a fraction of a
+millimeter apart is then partly chance; the final runs on five other seeds judge
+it.
