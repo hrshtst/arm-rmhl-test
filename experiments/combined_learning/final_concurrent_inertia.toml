@@ -1,7 +1,7 @@
 # The final runs for inertia-scaled feedback, concurrent schedule, at its tuned
-# setting: the feedback's learning rate of 160 with 2.5 rad/s^2 (round 1), the
-# feedforward's forgetting factor of 0.9999 with a delta of 10 (its round kept
-# report 002's). Seeds 1 to 5, which the tuning never saw, for 10,000 trials.
+# setting: the feedforward without forgetting, a delta of 10 (the protocol's step
+# 1.4), the feedback's learning rate of 16 with 2.5 rad/s^2 (rounds 5 to 7). Seeds
+# 1 to 5, which the tuning never saw, for 10,000 trials.
 
 # arm-esn-ctrl's v2 arm: two links in the horizontal plane, without gravity.
 [initial]
@@ -42,7 +42,7 @@ damping_ratio = 0.7
 
 # The feedforward: feedback-error learning with an RLS readout.
 [readout]
-forgetting = 0.9999
+forgetting = 1.0  # none: below 1, the covariance winds up (README.md)
 delta = 10.0  # the covariance starts at the identity over delta
 
 [feedback]
@@ -52,7 +52,7 @@ scale = "inertia"  # each joint's output times its inertia: the output is in rad
 # reward's difference from the mean of the last 50 rewards.
 [rule]
 preset = "burms2015"
-learning_rate = 160.0
+learning_rate = 16.0
 decorrelation = 1.0  # as burms2015 sets it
 
 [rule.exploration]

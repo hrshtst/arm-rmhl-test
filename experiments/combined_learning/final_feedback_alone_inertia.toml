@@ -1,4 +1,4 @@
-# Ablation: the inertia-scaled feedback alone, at the concurrent schedule's tuned
+# Ablation: the feedback alone, inertia-scaled, at the concurrent schedule's tuned
 # setting (final_concurrent_inertia.toml) without its feedforward. Seeds 1 to 5,
 # 10,000 trials.
 
@@ -46,7 +46,7 @@ scale = "inertia"  # each joint's output times its inertia: the output is in rad
 # reward's difference from the mean of the last 50 rewards.
 [rule]
 preset = "burms2015"
-learning_rate = 160.0
+learning_rate = 16.0
 decorrelation = 1.0  # as burms2015 sets it
 
 [rule.exploration]

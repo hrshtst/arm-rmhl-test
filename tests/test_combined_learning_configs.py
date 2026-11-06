@@ -192,7 +192,7 @@ def test_the_feedforward_alone_at_report_002s_setting_continues_its_final_run():
     "path",
     [
         *EXPERIMENT.glob("tune_concurrent_*_round[5-9].toml"),  # the protocol's step 1.4
-        EXPERIMENT / "final_concurrent_raw.toml",
+        *EXPERIMENT.glob("final_concurrent_*.toml"),
         *EXPERIMENT.glob("final_feedforward_alone_*.toml"),
     ],
     ids=lambda path: path.stem,
