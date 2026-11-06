@@ -17,7 +17,11 @@ with [skelarm](https://github.com/hrshtst/skelarm).
 > reaches; the plain rule's gains run away on half of its seeds. Report
 > [002](reports/002-feedback-error-learning/README.md) gives it a supervised
 > baseline: feedback-error learning with an RLS readout learns a feedforward to
-> 3.8 mm in 100 reaches and settles at 4.6 mm.
+> 3.8 mm in 100 reaches and settles at 4.6 mm. Report
+> [003](reports/003-combined-learning/README.md) learns the two together: three
+> of four variants track to 1.1 to 1.5 mm in 10,000 reaches, past the 40-rad/s
+> PD that neither reached alone; the feedforward winds up if it forgets, and one
+> variant, tuned on one seed, runs away on 4 of 5 others.
 
 ## Motivation
 
@@ -209,6 +213,7 @@ Each report has five parts:
 | --- | --- | --- |
 | [001 Feedback from scratch](reports/001-feedback-from-scratch/README.md) | RQ1: can RMHL learn feedback for a weak PD from one reward per reach? | Yes with the decorrelated rule, to 6 to 9 mm in 3,000 reaches and 4 to 6 mm in 10,000 on every seed, inertia-scaled with a chattering torque; the plain rule's gains run away on half of its seeds. |
 | [002 Feedback-error learning](reports/002-feedback-error-learning/README.md) | RQ1's supervised baseline: how fast and how close does an online learner given a target torque every control period come? | Feedback-error learning with an RLS readout passes the 20- and 28-rad/s PDs after 25 and 53 reaches, against 1,020 to 7,280 for RMHL, with the least effort, and settles at 4.6 mm, near the 4.2 mm of the best linear fit of the needed torque. |
+| [003 Combined learning](reports/003-combined-learning/README.md) | RQ1: learned together, do the feedforward of feedback-error learning and RMHL's feedback track more closely than either alone, and what does each do? | Yes for three of four variants: 1.1 to 1.5 mm in 10,000 reaches, past the 40-rad/s PD, with the least effort; the feedforward winds up if it forgets, and the inertia-scaled staged schedule, tuned on one seed, runs away on 4 of 5 others. |
 
 ## Dependencies
 

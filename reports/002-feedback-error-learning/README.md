@@ -340,7 +340,9 @@ What is not claimed:
 
 1. **Combine them.** Start the reward-modulated rule from feedback-error learning's
    feedforward, or add its feedback to it: does the reward then push past the
-   4.6 mm at which feedback-error learning stops?
+   4.6 mm at which feedback-error learning stops? Done in report
+   [003](../003-combined-learning/README.md): learned together, three of four
+   variants track to 1.1 to 1.5 mm in 10,000 reaches.
 2. **A richer feedforward:** nonlinear features of the reference, such as the
    NVAR's polynomial terms or a random reservoir, against the needed torque's
    2.7 mm.
