@@ -144,6 +144,9 @@ the noise-free tracking errors, at 1,000 trials on seed 0 for the tuning, and at
 | `20261106-134705-final_concurrent_inertia` | All 5 improve: 1.08 to 1.36 mm, median 1.25 mm (2.02 mm at 1,000 trials, 1.50 mm at 3,000), still falling. The feedforward's weights hold below 0.6. |
 | `20261106-134705-final_feedback_alone_inertia` | All 5 improve: 21.8 to 26.0 mm, median 24.6 mm (103 mm at 1,000 trials, 58.8 mm at 3,000), still falling: its learning rate of 16 is a tenth of the setting before the protocol's step 1.4. |
 | `20261106-134705-final_feedforward_alone_inertia` | 4.47 mm; its closest, 3.74 mm, at 500 trials (3.85 mm at 1,000, 4.19 mm at 3,000), rising slowly. It does not wind up: its weights hold below 0.5. |
+| `20261106-151833-compare_raw` | The final runs for raw torque, both schedules and the ablations, against the decorrelated rule tuned alone (median 5.6 mm at 10,000 trials) and the PDs; one of report 003's figures. |
+| `20261106-151909-compare_inertia` | Likewise, inertia-scaled (the decorrelated rule tuned alone: median 3.8 mm). |
+| `20261106-151834-compare_feedforward` | The feedforward alone: report 002's final run, the same continued until it winds up, and both settings without forgetting. |
 
 ## The feedforward's wind-up
 
