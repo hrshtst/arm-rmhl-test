@@ -135,7 +135,7 @@ the noise-free tracking errors, at 1,000 trials on seed 0 for the tuning, and at
 | `20261106-133440-windup_feedforward_alone` | Every forgetting factor below 1 runs away, every `delta` alike, and stays worse than the PD alone from 16 to 19 trials at 0.99, 160 to 180 at 0.999, and 1,260 to 1,580 at 0.9999: times one minus the forgetting factor, 0.13 to 0.19 across the three. Without forgetting, none does through 3,000 trials: 3.9 to 11.6 mm at 1,000, the closest with a `delta` of 10. At 0.999 and 0.99, the weights grow on after the arm reaches its stops, until the error is no longer finite, from 1,080 to 2,040 trials and from 140 to 220; with a `delta` of 10, at both, an `OverflowError` ends the training (`diverged`). At 0.9999, the arm stays at its stops, 719 mm off, raising nothing. |
 | `20261105-215525-final_staged_raw` | All 5 improve: 1.47 to 1.63 mm, median 1.54 mm (2.15 mm at 1,000 trials, 1.79 mm at 3,000), still falling. |
 | `20261105-215525-final_staged_inertia` | 1 of 5 improves, seed 1, 1.05 mm. Seeds 2 to 4 run away within 200 reaches of the handover, seed 5 at 5,100 reaches, to 702 to 784 mm, raising nothing; the feedforward's weights stand still, frozen since the handover, while the feedback's grow. |
-| `20261105-215525-final_concurrent_inertia` | Superseded: run with the feedforward forgetting at 0.9999 and the feedback at 160 with 2.5 rad/s^2, before the protocol's step 1.4. None improves. Seeds 1 and 2 track at 1.2 mm after 1,000 reaches, then run away at 1,580, the feedforward's weights jumping from below 1 to hundreds: they wind up, as the feedforward alone does, at the same reach. Seed 3 runs away at 1,540, from 9.2 mm. Seeds 4 and 5 run away within 200 reaches, long before the feedforward could wind up. All end at 719 mm, the arm against its stops, raising nothing, apart from seed 4, which raises at reach 9,149. |
+| `20261105-215525-final_concurrent_inertia` | Superseded: run with the feedforward forgetting at 0.9999 and the feedback at 160 with 2.5 rad/s^2, before the protocol's step 1.4. None improves. Seeds 1 and 2 track at 1.2 mm after 1,000 reaches, then run away at 1,580, the feedforward's weights jumping from below 1 to hundreds: they wind up, as the feedforward alone does, at the same reach. Seed 3 runs away at 1,560, from 9.1 mm at 1,520 and 25.8 mm at 1,540. Seeds 4 and 5 run away within 200 reaches, long before the feedforward could wind up. All end at 719 mm, the arm against its stops, raising nothing, apart from seed 4, which raises at reach 9,149. |
 | `20261105-215525-final_feedback_alone_inertia` | Superseded: the feedback alone at 160 with 2.5 rad/s^2, the concurrent schedule's setting before the protocol's step 1.4. All 5 improve: 5.5 to 8.1 mm, median 6.6 mm (30.6 mm at 1,000 trials, 12.5 mm at 3,000), still falling. |
 | `20261105-215525-final_feedforward_alone` | Report 002's final run, continued (run as the concurrent inertia-scaled schedule's ablation, before the protocol's step 1.4), within 2.4e-16 m of it over its 1,000 reaches: 4.58 mm at 1,000 reaches and 4.73 mm at 1,360. Then it winds up: it swings out to 20 and 122 mm at 1,380 and 1,500, and runs away for good at 1,580, to 719 mm, raising nothing; its weights reach 1e17. |
 | `20261106-133311-final_concurrent_raw` | 4 of 5 improve: 1.00 to 1.28 mm; the median of all 5, 1.12 mm (1.63 mm at 1,000 trials, 1.30 mm at 3,000). Seed 2 runs away at reach 4, before the feedforward has learned much, swings between 286 and 827 mm, and ends at 286 mm, raising nothing. The feedforward's weights hold below 1.1 on the 4 seeds that improve. |
@@ -155,15 +155,17 @@ the feedforward's seven inputs, `[q_ref, dq_ref, ddq_ref, 1]`, span only four
 dimensions: the two reference angles and the constant are affinely dependent, and so
 are the two velocities and the two accelerations. Below a forgetting factor of 1, an
 RLS readout's covariance grows by the inverse of the factor every period in the
-directions no input excites. The reaches before the feedforward runs away scale
-with 1/(1 - λ), as wind-up does, in every run that keeps learning: 12 to 20 at
-0.99, 160 to 180 at 0.999, and 1,380 to 1,580 at 0.9999, after the covariance has
-grown about 1e12-fold in those directions. The feedforward alone, without the
-feedback beside it, does the same (`windup_feedforward_alone`). Report 002's and
-the tuning's budgets were too short to show it at 0.9999. With a forgetting factor of 1, the covariance
-does not grow, and the concurrent schedule's feedforward is tuned again without
-forgetting (the protocol's step 1.4). The staged schedule's feedforward stops
-learning after 100 reaches.
+directions no input excites. The feedforward alone (`windup_feedforward_alone`)
+stays worse than the PD alone from 16 to 19 reaches at 0.99, 160 to 180 at 0.999,
+and 1,260 to 1,580 at 0.9999. These scale with 1/(1 - λ), as wind-up does, and
+come after the covariance has grown 1e11- to 1e16-fold in those directions. With
+the feedback learning beside it, where the feedback does not run away first, it
+does the same: from 180 reaches at 0.999 (the feedforward's rounds of the
+concurrent schedule) and from 1,560 to 1,580 at 0.9999 (the first concurrent final
+runs). Report 002's and the tuning's budgets were too short to show it at 0.9999.
+With a forgetting factor of 1, the covariance does not grow, and the concurrent
+schedule's feedforward is tuned again without forgetting (the protocol's step
+1.4). The staged schedule's feedforward stops learning after 100 reaches.
 
 The tuned settings:
 
