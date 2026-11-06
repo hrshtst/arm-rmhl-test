@@ -53,7 +53,14 @@ skelarm raised.
    2. the feedforward's forgetting factor by its `delta`, report 002's grid, with
       each variant's best feedback setting (`tune_readout_<schedule>_<scale>.toml`);
    3. if the feedforward's best setting moved, the feedback's settings again,
-      around their best.
+      around their best;
+   4. added after the first final runs, which showed the feedforward winding up
+      (see [below](#the-feedforwards-wind-up)): for the concurrent schedule, the
+      feedforward does not forget, a forgetting factor of 1 with its best `delta`
+      for it in its round, and the feedback's settings again around their best
+      (`tune_concurrent_<scale>_round5.toml`). The staged schedule keeps its
+      settings: its feedforward stops learning after 100 reaches, long before it
+      could wind up.
 2. **The final runs**, on seeds 1 to 5, which the tuning never saw, for 10,000
    reaches: each schedule and scale at its tuned setting; the ablations, each
    learner alone at the concurrent schedule's settings, the feedback on seeds 1 to
@@ -78,6 +85,8 @@ skelarm raised.
 | `tune_readout_concurrent_raw.toml` | `learn_combined.py` | the feedforward's round, raw torque, concurrent, the feedback at 80 and 0.32 N m: the same grid |
 | `tune_readout_staged_inertia.toml` | `learn_combined.py` | the feedforward's round, inertia-scaled, staged, the feedback at 5,000 and 0.25 rad/s^2: the same grid |
 | `tune_concurrent_raw_round4.toml` | `learn_combined.py` | the feedback again, raw torque, concurrent, with the feedforward's new best (0.9999, 100): learning rates 25, 80, and 250 by amplitudes 0.1, 0.32, and 1 N m |
+| `tune_concurrent_raw_round5.toml` | `learn_combined.py` | the feedback again, raw torque, concurrent, the feedforward without forgetting (1, 100): learning rates 25, 80, and 250 by amplitudes 0.1, 0.32, and 1 N m |
+| `tune_concurrent_inertia_round5.toml` | `learn_combined.py` | the feedback again, inertia-scaled, concurrent, the feedforward without forgetting (1, 10): learning rates 50, 160, and 500 by amplitudes 0.8, 2.5, and 8 rad/s^2 |
 | `final_staged_raw.toml` | `learn_combined.py` | the final runs, raw torque, staged: the tuned setting on seeds 1 to 5, 10,000 trials |
 | `final_concurrent_inertia.toml` | `learn_combined.py` | the final runs, inertia-scaled, concurrent: likewise |
 | `final_staged_inertia.toml` | `learn_combined.py` | the final runs, inertia-scaled, staged: likewise |
@@ -91,7 +100,8 @@ uv run python experiments/learn_combined.py experiments/combined_learning/<confi
 ## Runs
 
 Under `results/combined_learning/` in the storage root, all current. Errors are
-the noise-free tracking errors at 1,000 trials on seed 0.
+the noise-free tracking errors, at 1,000 trials on seed 0 for the tuning, and at
+10,000 trials on seeds 1 to 5 for the final runs.
 
 | Run | Result |
 | --- | --- |
@@ -104,14 +114,34 @@ the noise-free tracking errors at 1,000 trials on seed 0.
 | `20261105-213923-tune_staged_inertia_round3` | 5,000 with 0.8 rad/s^2 runs away, to 786 mm: 5,000 with 0.25 rad/s^2 stays the closest. |
 | `20261105-213923-tune_readout_concurrent_raw` | 4 of 16 improve. The closest is a forgetting factor of 0.9999 with a `delta` of 100, 1.45 mm, ahead of report 002's setting, 1.62 mm, bit for bit round 1's run; over the evaluations from 800 to 1,000 trials, though, their means are 1.77 and 1.70 mm. 8 run away to 546 to 719 mm; at 0.99, rclib raises. The best is on the grid's edge in `delta`; the grid is not extended, as the protocol's round for the feedforward is report 002's grid, and at 1,000 trials the effect of `delta` is within the swing between evaluations. |
 | `20261105-213923-tune_readout_staged_inertia` | 3 of 16 improve. The closest is report 002's setting, 1.44 mm, bit for bit round 2's run; the other 13 run away, to 687 to 816 mm, raising nothing. |
+| `20261105-215525-tune_concurrent_raw_round4` | 8 of 9 improve. The closest is a learning rate of 250 with 0.32 N m, 1.00 mm, on the grid's edge (round 2 ran 250 and 800 with the feedforward at 0.9999 and 10: all ran away); 80 with 0.32 N m, 1.45 mm, is bit for bit the feedforward's round. 250 with 1 N m runs away, to 708 mm. Superseded by round 5: the feedforward winds up below a forgetting factor of 1. |
+| `20261105-215525-final_staged_raw` | All 5 improve: 1.47 to 1.63 mm, median 1.54 mm (2.15 mm at 1,000 trials, 1.79 mm at 3,000), still falling. |
+| `20261105-215525-final_staged_inertia` | 1 of 5 improves, seed 1, 1.05 mm. Seeds 2 to 4 run away within 200 reaches of the handover, seed 5 at 5,100 reaches, to 702 to 784 mm, raising nothing; the feedforward's weights stand still, frozen since the handover, while the feedback's grow. |
+| `20261105-215525-final_concurrent_inertia` | None improves. Seeds 1 and 2 track at 1.2 mm after 1,000 reaches, then run away at 1,580, the feedforward's weights jumping from below 1 to hundreds: they wind up, as the feedforward alone does, at the same reach. Seed 3 runs away at 1,540, from 9.2 mm. Seeds 4 and 5 run away within 200 reaches, long before the feedforward could wind up. All end at 719 mm, the arm against its stops, raising nothing, apart from seed 4, which raises at reach 9,149. |
+| `20261105-215525-final_feedback_alone_inertia` | All 5 improve: 5.5 to 8.1 mm, median 6.6 mm (30.6 mm at 1,000 trials, 12.5 mm at 3,000), still falling. |
+| `20261105-215525-final_feedforward_alone` | Report 002's final run, continued, within 2.4e-16 m of it over its 1,000 reaches: 4.58 mm at 1,000 reaches and 4.73 mm at 1,360. Then it winds up: it swings out to 20 and 122 mm at 1,380 and 1,500, and runs away for good at 1,580, to 719 mm, raising nothing; its weights reach 1e17. |
 
-The tuned settings, apart from raw torque with the concurrent schedule, which waits
-on round 4:
+## The feedforward's wind-up
+
+The reach moves both joints along the same minimum-jerk profile, so over a reach
+the feedforward's seven inputs, `[q_ref, dq_ref, ddq_ref, 1]`, span only four
+dimensions: the two reference angles and the constant are affinely dependent, and so
+are the two velocities and the two accelerations. Below a forgetting factor of 1, an
+RLS readout's covariance grows by the inverse of the factor every period in the
+directions no input excites. The reaches before the feedforward runs away scale
+with 1/(1 - λ), as wind-up does, in every run that keeps learning: 12 to 20 at
+0.99, 160 to 180 at 0.999, and 1,380 to 1,580 at 0.9999, after the covariance has
+grown about 1e12-fold in those directions. Report 002's and the tuning's budgets
+were too short to show it at 0.9999. With a forgetting factor of 1, the covariance
+does not grow, and the concurrent schedule's feedforward is tuned again without
+forgetting (the protocol's step 1.4). The staged schedule's feedforward stops
+learning after 100 reaches.
+
+The tuned settings, apart from the concurrent schedule's, which wait on round 5:
 
 | Variant | Feedback: learning rate, amplitude | Feedforward: forgetting factor, `delta` | Error at 1,000 trials, seed 0 |
 | --- | --- | --- | --- |
 | raw torque, staged | 8, 0.32 N m | 0.9999, 10 | 2.29 mm |
-| inertia-scaled, concurrent | 160, 2.5 rad/s^2 | 0.9999, 10 | 1.38 mm |
 | inertia-scaled, staged | 5,000, 0.25 rad/s^2 | 0.9999, 10 | 1.44 mm |
 
 The error swings between evaluations 20 trials apart. After 200 trials, the largest
