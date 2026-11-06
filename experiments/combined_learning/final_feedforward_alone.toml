@@ -1,6 +1,7 @@
-# Ablation: the feedforward alone, at the concurrent inertia-scaled schedule's tuned
-# setting (final_concurrent_inertia.toml) without its feedback: report 002's
-# setting, for 10,000 trials. There is no noise, so one training.
+# Ablation: the feedforward alone at report 002's setting, a forgetting factor of
+# 0.9999 with a delta of 10: report 002's final run, continued for 10,000 trials.
+# There is no noise, so one training. It ran as the concurrent inertia-scaled
+# schedule's ablation before the protocol's step 1.4, and shows the wind-up (README.md).
 
 # arm-esn-ctrl's v2 arm: two links in the horizontal plane, without gravity.
 [initial]

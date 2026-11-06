@@ -169,9 +169,33 @@ def test_the_feedback_alone_is_a_concurrent_final_without_its_feedforward():
 
 
 def test_the_feedforward_alone_is_a_concurrent_final_without_its_feedback():
-    alone = load(EXPERIMENT / "final_feedforward_alone.toml")
-    combined = load(EXPERIMENT / "final_concurrent_inertia.toml")
+    paths = list(EXPERIMENT.glob("final_feedforward_alone_*.toml"))
+    assert paths
+    for path in paths:
+        variant = path.stem.removeprefix("final_feedforward_alone_")
+        combined = load(EXPERIMENT / f"final_concurrent_{variant}.toml")
+        for table in ("feedback", "rule", "sweep"):  # without noise, the seeds change nothing
+            del combined[table]
+        assert load(path) == combined
 
-    for table in ("feedback", "rule", "sweep"):  # without noise, the seeds change nothing
-        del combined[table]
-    assert alone == combined
+
+def test_the_feedforward_alone_at_report_002s_setting_continues_its_final_run():
+    alone = load(EXPERIMENT / "final_feedforward_alone.toml")
+    report_002 = load(REPO_ROOT / "experiments/feedback_error_learning/final.toml")
+
+    assert alone["readout"] == report_002["readout"]
+    assert "rule" not in alone
+    assert alone["training"]["trials"] == 10000
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        *EXPERIMENT.glob("tune_concurrent_*_round[5-9].toml"),  # the protocol's step 1.4
+        EXPERIMENT / "final_concurrent_raw.toml",
+        *EXPERIMENT.glob("final_feedforward_alone_*.toml"),
+    ],
+    ids=lambda path: path.stem,
+)
+def test_the_concurrent_schedules_feedforward_does_not_forget(path: Path):
+    assert load(path)["readout"]["forgetting"] == 1.0  # below 1, it winds up (README.md)
