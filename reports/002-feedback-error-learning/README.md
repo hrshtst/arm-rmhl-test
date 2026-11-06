@@ -36,6 +36,23 @@ torque the reach needs, tracks to 4.2 mm.
   ran away within 20 reaches. The arm sat at a joint stop through the whole reach,
   with no error raised, like report 001's plain rule.
 
+**Note, 2026-11-06: past 1,000 reaches, the final run's feedforward winds up.**
+Continued for 10,000 reaches in `combined_learning`'s run `final_feedforward_alone`,
+within 2.4e-16 m of this report's final run over its 1,000 reaches, it held near
+4.6 mm through 1,360 reaches. Then it swung out, and from 1,580 reaches it ran away
+for good, silently, its weights growing to 1e17. Along the reach both joints follow
+one minimum-jerk profile, so the readout's seven inputs span only four dimensions.
+Below a forgetting factor of 1, RLS's covariance grows without bound in the other
+three. In every run of that experiment whose feedforward keeps learning, the
+reaches before it runs away scale with 1/(1 - λ): 12 to 20 at 0.99, 160 to 180 at
+0.999 (the reward-modulated feedback learning beside it), and 1,380 to 1,580 at
+0.9999. This supports reading the run-aways at 0.99 (Section 3.1) as wind-up, in
+the directions the reach never excites rather than the ones its hold leaves out.
+The settings at 0.999, too, settled only within this report's 100 reaches, and "it
+settles, and stays" holds only through about 1,360 reaches. The results below,
+all within 1,000 reaches, are unchanged; see
+[`combined_learning`](../../experiments/combined_learning/README.md#the-feedforwards-wind-up).
+
 ## 1. Question
 
 A supervised baseline for report [001](../001-feedback-from-scratch/README.md),
