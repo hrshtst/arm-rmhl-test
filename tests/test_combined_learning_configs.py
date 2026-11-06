@@ -199,3 +199,13 @@ def test_the_feedforward_alone_at_report_002s_setting_continues_its_final_run():
 )
 def test_the_concurrent_schedules_feedforward_does_not_forget(path: Path):
     assert load(path)["readout"]["forgetting"] == 1.0  # below 1, it winds up (README.md)
+
+
+def test_the_wind_up_sweep_is_report_002s_grid_on_the_feedforward_alone_for_3000_trials():
+    sweep = load(EXPERIMENT / "windup_feedforward_alone.toml")
+    alone = load(EXPERIMENT / "final_feedforward_alone.toml")
+
+    assert sweep.pop("sweep") == load(REPO_ROOT / "experiments/feedback_error_learning/tune.toml")["sweep"]
+    assert sweep["training"].pop("trials") == 3000
+    del alone["training"]["trials"]
+    assert sweep == alone  # report 002's setting, where the sweep does not replace it

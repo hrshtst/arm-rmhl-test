@@ -97,6 +97,7 @@ skelarm raised.
 | `final_concurrent_raw.toml` | `learn_combined.py` | the final runs, raw torque, concurrent, the feedforward without forgetting: the tuned setting on seeds 1 to 5, 10,000 trials |
 | `final_feedback_alone_raw.toml` | `learn_combined.py` | ablation: `final_concurrent_raw.toml` without its feedforward, seeds 1 to 5 |
 | `final_feedforward_alone_raw.toml` | `learn_combined.py` | ablation: `final_concurrent_raw.toml` without its feedback, once |
+| `windup_feedforward_alone.toml` | `learn_combined.py` | the wind-up without the feedback: the feedforward alone over report 002's grid, 4 forgetting factors by 4 values of `delta`, 3,000 trials |
 | `final_feedforward_alone.toml` | `learn_combined.py` | the feedforward alone at report 002's setting, forgetting at 0.9999: report 002's final run continued, once; it shows the wind-up |
 
 ```bash
