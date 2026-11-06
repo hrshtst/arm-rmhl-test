@@ -1,13 +1,14 @@
 # Copyright (C) 2026 Hiroshi Atsuta <atsuta@ieee.org>
 # SPDX-License-Identifier: GPL-3.0-only
 
-"""Compare the learning of several runs of ``learn_feedback.py`` with joint PDs of a ``pd_grid.py`` run.
+"""Compare the learning of several runs with joint PDs of a ``pd_grid.py`` run.
 
     uv run python experiments/compare_learning.py experiments/<experiment>/compare_<name>.toml
 
-Each ``[[arm]]`` table names a run of ``experiments/learn_feedback.py`` by its
-``run`` (a path under the storage root), with a ``label``; every combination of
-the run is one training of the arm, normally one seed each. The ``[pd]`` table
+Each ``[[arm]]`` table names a run of ``experiments/learn_feedback.py``,
+``learn_feedforward.py``, or ``learn_combined.py`` by its ``run`` (a path under
+the storage root), with a ``label``; every combination of the run is one
+training of the arm, normally one seed each. The ``[pd]`` table
 names a run of ``experiments/pd_grid.py`` by its ``run``, and ``marks``: pairs of
 a natural frequency (rad/s) and a damping ratio whose tracking error is drawn as a
 reference. The closest PD of the grid is always drawn, and so is the PD alone
@@ -57,7 +58,7 @@ SPARSE = FuncFormatter(
 
 @dataclass(frozen=True)
 class Arm:
-    """The trainings of one run of ``learn_feedback.py``."""
+    """The trainings of one learning run."""
 
     label: str
     rows: list[dict[str, str]]  # runs.csv
@@ -112,7 +113,7 @@ def trials_axis(config: dict[str, Any]) -> str:
 
 
 def load_arm(run: Path, label: str) -> Arm:
-    """The trainings of a run of ``learn_feedback.py``."""
+    """The trainings of a learning run."""
     with (run / "runs.csv").open() as f:
         rows = list(csv.DictReader(f))
     with np.load(run / "training.npz") as data:
