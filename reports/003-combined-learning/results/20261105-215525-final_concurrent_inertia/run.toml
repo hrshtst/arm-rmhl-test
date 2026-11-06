@@ -1,0 +1,6 @@
+config = "experiments/combined_learning/final_concurrent_inertia.toml"
+command = "experiments/learn_combined.py experiments/combined_learning/final_concurrent_inertia.toml --workers 5"
+started = 2026-11-05 21:55:25+09:00
+host = "delbosque"
+commit = "8122dc0ba789cb172fe5cc42e9c7d87ada31b273"
+uncommitted_changes = false

@@ -1,0 +1,6 @@
+config = "experiments/combined_learning/tune_concurrent_raw_round6.toml"
+command = "experiments/learn_combined.py experiments/combined_learning/tune_concurrent_raw_round6.toml --workers 6"
+started = 2026-11-06 13:23:33+09:00
+host = "delbosque"
+commit = "3b7d82842c984932ab981032052c321f765f87fe"
+uncommitted_changes = false

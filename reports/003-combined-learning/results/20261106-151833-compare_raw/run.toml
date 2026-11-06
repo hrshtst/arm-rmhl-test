@@ -1,0 +1,6 @@
+config = "experiments/combined_learning/compare_raw.toml"
+command = "experiments/compare_learning.py experiments/combined_learning/compare_raw.toml"
+started = 2026-11-06 15:18:33+09:00
+host = "delbosque"
+commit = "26f6e166c587ea017c80493383aa2290e306619a"
+uncommitted_changes = false

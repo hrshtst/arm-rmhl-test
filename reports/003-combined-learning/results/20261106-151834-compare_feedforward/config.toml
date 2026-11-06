@@ -1,0 +1,26 @@
+# The feedforward alone: report 002's final run, the same setting continued to
+# 10,000 trials, where it winds up, and the concurrent schedules' settings without
+# forgetting, each one training, against PDs of feedback_from_scratch's grid.
+
+[[arm]]
+run = "results/feedback_error_learning/20261104-152149-final"
+label = "report 002's final run: 0.9999, delta 10"
+
+[[arm]]
+run = "results/combined_learning/20261105-215525-final_feedforward_alone"
+label = "the same, continued"
+
+[[arm]]
+run = "results/combined_learning/20261106-134705-final_feedforward_alone_inertia"
+label = "no forgetting, delta 10"
+
+[[arm]]
+run = "results/combined_learning/20261106-133311-final_feedforward_alone_raw"
+label = "no forgetting, delta 100"
+
+[pd]
+run = "results/feedback_from_scratch/20261103-210822-pd_grid"
+marks = [[20.0, 0.7], [28.0, 0.7], [40.0, 0.4]]  # rad/s and damping ratio
+
+[plot]
+trials = "log"  # the feedforward converges in tens of trials, and winds up after 1,000

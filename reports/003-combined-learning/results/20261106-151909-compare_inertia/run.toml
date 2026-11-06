@@ -1,0 +1,6 @@
+config = "experiments/combined_learning/compare_inertia.toml"
+command = "experiments/compare_learning.py experiments/combined_learning/compare_inertia.toml"
+started = 2026-11-06 15:19:09+09:00
+host = "delbosque"
+commit = "f6bce55bdf64b41d924df2a2b46dfd4680e36be8"
+uncommitted_changes = false

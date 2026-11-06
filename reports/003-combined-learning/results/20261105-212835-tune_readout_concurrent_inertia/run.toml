@@ -1,0 +1,6 @@
+config = "experiments/combined_learning/tune_readout_concurrent_inertia.toml"
+command = "experiments/learn_combined.py experiments/combined_learning/tune_readout_concurrent_inertia.toml --workers 16"
+started = 2026-11-05 21:28:35+09:00
+host = "delbosque"
+commit = "8c4cf01a3a5735398051ec9ba6ad55e480b624c4"
+uncommitted_changes = false

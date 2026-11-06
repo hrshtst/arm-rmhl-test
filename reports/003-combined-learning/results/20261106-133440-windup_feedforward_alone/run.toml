@@ -1,0 +1,6 @@
+config = "experiments/combined_learning/windup_feedforward_alone.toml"
+command = "experiments/learn_combined.py experiments/combined_learning/windup_feedforward_alone.toml --workers 16"
+started = 2026-11-06 13:34:40+09:00
+host = "delbosque"
+commit = "0701c7063fbe8018d8f51032e4a4ccc2ff878a98"
+uncommitted_changes = false

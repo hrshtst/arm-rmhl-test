@@ -1,0 +1,6 @@
+config = "experiments/combined_learning/tune_readout_staged_inertia.toml"
+command = "experiments/learn_combined.py experiments/combined_learning/tune_readout_staged_inertia.toml --workers 16"
+started = 2026-11-05 21:39:23+09:00
+host = "delbosque"
+commit = "9b0b078a5ffc4b51bfe22798121d1a8f96840138"
+uncommitted_changes = false
