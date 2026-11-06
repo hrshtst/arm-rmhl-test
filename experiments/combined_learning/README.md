@@ -100,9 +100,13 @@ skelarm raised.
 | `final_feedforward_alone_raw.toml` | `learn_combined.py` | ablation: `final_concurrent_raw.toml` without its feedback, once |
 | `windup_feedforward_alone.toml` | `learn_combined.py` | the wind-up without the feedback: the feedforward alone over report 002's grid, 4 forgetting factors by 4 values of `delta`, 3,000 trials |
 | `final_feedforward_alone.toml` | `learn_combined.py` | the feedforward alone at report 002's setting, forgetting at 0.9999: report 002's final run continued, once; it shows the wind-up |
+| `compare_raw.toml` | `compare_learning.py` | the final runs for raw torque, both schedules and the ablations, against the decorrelated rule tuned alone for 10,000 trials in `feedback_from_scratch`, the PD alone, and PDs of its grid |
+| `compare_inertia.toml` | `compare_learning.py` | likewise, inertia-scaled |
+| `compare_feedforward.toml` | `compare_learning.py` | the feedforward alone: report 002's final run, the same continued, and both settings without forgetting |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/combined_learning/<configuration>.toml --workers 20
+uv run python experiments/compare_learning.py experiments/combined_learning/compare_<name>.toml
 ```
 
 ## Runs
