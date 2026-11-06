@@ -141,6 +141,9 @@ the noise-free tracking errors, at 1,000 trials on seed 0 for the tuning, and at
 | `20261106-133311-final_concurrent_raw` | 4 of 5 improve: 1.00 to 1.28 mm; the median of all 5, 1.12 mm (1.63 mm at 1,000 trials, 1.30 mm at 3,000). Seed 2 runs away at reach 4, before the feedforward has learned much, swings between 286 and 827 mm, and ends at 286 mm, raising nothing. The feedforward's weights hold below 1.1 on the 4 seeds that improve. |
 | `20261106-133311-final_feedback_alone_raw` | 1 of 5 improves, seed 2, 4.17 mm (31.2 mm at 1,000 trials, 6.2 mm at 3,000), still falling. Seeds 1, 3, 4 and 5 run away within 5 reaches and end at 440 to 691 mm, raising nothing; seed 4 comes back to 139 mm once, at reach 3,880. Its learning rate of 80 is 32 times report 001's for raw torque. |
 | `20261106-133311-final_feedforward_alone_raw` | 4.65 mm (5.64 mm at 1,000 trials, 4.96 mm at 3,000), still falling slowly. It does not wind up: its weights hold below 0.5. |
+| `20261106-134705-final_concurrent_inertia` | All 5 improve: 1.08 to 1.36 mm, median 1.25 mm (2.02 mm at 1,000 trials, 1.50 mm at 3,000), still falling. The feedforward's weights hold below 0.6. |
+| `20261106-134705-final_feedback_alone_inertia` | All 5 improve: 21.8 to 26.0 mm, median 24.6 mm (103 mm at 1,000 trials, 58.8 mm at 3,000), still falling: its learning rate of 16 is a tenth of the setting before the protocol's step 1.4. |
+| `20261106-134705-final_feedforward_alone_inertia` | 4.47 mm; its closest, 3.74 mm, at 500 trials (3.85 mm at 1,000, 4.19 mm at 3,000), rising slowly. It does not wind up: its weights hold below 0.5. |
 
 ## The feedforward's wind-up
 
