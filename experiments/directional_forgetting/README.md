@@ -72,6 +72,8 @@ budget? This belongs to RQ1 of the [project README](../../README.md#research-que
 | `tune_concurrent_inertia_round3.toml` | `learn_combined.py` | round 2 past its corner, inertia-scaled: learning rates 16 and 50 by amplitudes 2.5, 8, and 25 rad/s^2 |
 | `final_concurrent_raw.toml` | `learn_combined.py` | the final runs, raw torque, at its tuned setting: the feedforward at 0.999 with 100, the feedback at 250 with 0.32 N m; seeds 1 to 5, 10,000 trials |
 | `final_feedforward_alone_raw.toml` | `learn_combined.py` | the feedforward alone at raw torque's tuned setting, 0.999 with 100, 10,000 trials, once |
+| `final_concurrent_inertia.toml` | `learn_combined.py` | the final runs, inertia-scaled, at its tuned setting: the feedforward at 0.999 with 10, the feedback at 50 with 8 rad/s^2; seeds 1 to 5, 10,000 trials |
+| `final_feedforward_alone_inertia.toml` | `learn_combined.py` | the feedforward alone at the inertia-scaled tuned setting, 0.999 with 10, 10,000 trials, once |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/directional_forgetting/<configuration>.toml --workers 16
@@ -90,3 +92,4 @@ trials on seeds 1 to 5 for the final runs.
 | `20261107-201946-tune_readout_concurrent_inertia` | 4 of 16 improve. The closest is a forgetting factor of 0.999 with a `delta` of 10, 1.61 mm (1.10 mm at 660 trials), ahead of 0.99 with 100, 1.94 mm, 0.9999 with 10, 2.36 mm, and 1 with 10, 2.99 mm. The rows at a forgetting factor of 1 are bit for bit `combined_learning`'s round. The other 12 run away, to 484 to 942 mm, raising nothing; at 0.99, forgetting exponentially, rclib raised within 2 trials. |
 | `20261107-211714-tune_concurrent_raw_round2` | 5 of 9 improve. A learning rate of 250 with 0.32 N m, 1.07 mm, stays the closest, now inside the grid, bit for bit the feedforward's round; ahead of 250 with 0.1 N m, 1.34 mm, and 80 with 0.32 N m, 1.45 mm. A learning rate of 800, and 250 with 1 N m, run away, to 655 to 715 mm. |
 | `20261107-211715-tune_concurrent_inertia_round2` | 5 of 9 improve. The closest is a learning rate of 50 with 8 rad/s^2, 1.52 mm, ahead of 160 with 2.5 rad/s^2, 1.61 mm, bit for bit the feedforward's round, and 160 with 0.8 rad/s^2, 1.63 mm; 50 with 8 rad/s^2 lies in the grid's corner. A learning rate of 500, and 160 with 8 rad/s^2, run away, to 374 to 761 mm. |
+| `20261107-221624-tune_concurrent_inertia_round3` | 4 of 6 improve. A learning rate of 50 with 8 rad/s^2, 1.52 mm, stays the closest, now inside the grids of rounds 2 and 3, ahead of 16 with 8 rad/s^2, 1.77 mm; the settings at 50 are bit for bit round 2's. 25 rad/s^2 runs away at both learning rates, to 445 and 539 mm. |
