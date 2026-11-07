@@ -26,7 +26,11 @@ A configuration sets the readout and the training in two tables:
 
 - ``[readout]``: RLS's ``forgetting`` factor, in (0, 1], and its ``delta``, the
   initial regularization: the covariance starts at the identity over ``delta``, so a
-  larger ``delta`` holds the weights nearer zero at first.
+  larger ``delta`` holds the weights nearer zero at first. An optional
+  ``forgetting_method`` says how a factor below 1 forgets: ``"exponential"``, the
+  default, in every direction, so the directions that the reach's inputs never
+  excite wind up; or ``"directional"``, only along each period's input (rclib's
+  ``readouts.Rls``).
 - ``[training]``: as in :mod:`arm_rmhl_test.feedback`. The ``dead_zone`` only
   changes the scores, since the learning does not use them.
 """
@@ -60,7 +64,10 @@ def make_model(table: Mapping[str, Any]) -> ESN:
     """The reference, through an identity NVAR, to an RLS readout with a bias, by the ``[readout]`` table."""
     model = ESN()
     model.add_reservoir(reservoirs.Nvar(num_lags=1, polynomial_order=1))  # passes the reference through
-    model.set_readout(readouts.Rls(float(table["forgetting"]), float(table["delta"]), include_bias=True))
+    method = str(table.get("forgetting_method", "exponential"))  # rclib checks it
+    model.set_readout(
+        readouts.Rls(float(table["forgetting"]), float(table["delta"]), include_bias=True, forgetting_method=method)
+    )
     return model
 
 

@@ -42,6 +42,15 @@ def test_the_readout_is_rls_with_the_settings_of_the_table():
     assert (readout.getLambda(), readout.getDelta(), readout.getIncludeBias()) == (0.999, 10.0, True)
 
 
+def test_the_readout_forgets_exponentially_unless_the_table_says_otherwise():
+    assert make_model(READOUT).get_readout().getForgettingMethod().name == "EXPONENTIAL"
+    for name in ("exponential", "directional"):
+        readout = make_model(READOUT | {"forgetting_method": name}).get_readout()
+        assert readout.getForgettingMethod().name == name.upper()
+    with pytest.raises(ValueError, match="forgetting_method"):
+        make_model(READOUT | {"forgetting_method": "linear"})
+
+
 def test_the_input_is_the_reference_at_the_start_of_each_period(setup):
     _, reach, _, _ = setup
 
