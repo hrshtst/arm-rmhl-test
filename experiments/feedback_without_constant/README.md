@@ -84,4 +84,15 @@ uv run python experiments/compare_learning.py experiments/feedback_without_const
 
 ## Runs
 
-Under `results/feedback_without_constant/` in the storage root. To come.
+Under `results/feedback_without_constant/` in the storage root. Errors are the
+noise-free tracking errors at 10,000 trials, on seeds 1 to 5.
+
+| Run | Result |
+| --- | --- |
+| `20261108-074908-final_concurrent_inertia` | 5 of 5 improve, to 0.69 to 0.77 mm; seed 5 too, which ran away by trial 10 with the constant. Without its feedback, each controller lags 8.8 to 12.4 mm, against a median of 159 mm with the constant. The feedforward's bias on joint 1 rises to 0.54 to 0.61 N m and moves by at most 0.04 N m from trial 5,000 on. |
+| `20261108-074908-final_concurrent_raw` | 1 of 5 improves, seed 2, to 0.80 mm. The others run away from trials 3 to 7, raising nothing: seeds 1, 3, and 4, which ran away from trials 2 and 3 with the constant, and seed 5, which held with it. Seed 2 had run away from trial 5,740 with the constant. |
+| `20261108-084909-compare_raw` | The final runs for raw torque, against `directional_forgetting`'s with the constant, `combined_learning`'s without forgetting, and the feedforward alone; one of report 005's figures. |
+| `20261108-084910-compare_inertia` | Likewise, inertia-scaled. |
+
+The comparisons `20261108-084847-compare_raw` and `20261108-084848-compare_inertia`
+came first, with longer labels whose panel titles overlapped; they are superseded.
