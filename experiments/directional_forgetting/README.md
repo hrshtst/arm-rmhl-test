@@ -109,3 +109,8 @@ trials on seeds 1 to 5 for the final runs.
 | `20261107-224228-final_concurrent_inertia` | 4 of 5 improve, to 0.74 to 1.16 mm; the median of the 5 is 0.83 mm. Seed 5 runs away over its first 10 trials, the feedback's weights growing first, raising nothing. |
 | `20261107-221827-final_feedforward_alone_raw` | Improves, to 4.54 mm at 10,000 trials, as at 1,000 (4.55 mm). |
 | `20261107-224229-final_feedforward_alone_inertia` | Improves, to 4.54 mm at 10,000 trials, as at 1,000; 3.83 mm at its best, after 87 trials. |
+| `20261108-023211-early_without_forgetting_raw` | Seeds 1, 3, and 4 run away from trials 2, 3, and 3, as forgetting directionally; seeds 2 and 5 improve, to 167 and 7.7 mm at trial 100. The early run-aways come with the feedback's setting, not with the forgetting. |
+| `20261108-023211-early_without_forgetting_inertia` | All 5 improve over the 100 trials, seed 5 too, to 25.9 mm at trial 100, where forgetting directionally it stayed worse than the weak PD alone from trial 10. |
+| `20261108-023252-compare_raw` | The final runs for raw torque against `combined_learning`'s without forgetting and the feedforward alone at both settings; one of report 004's figures. |
+| `20261108-023253-compare_inertia` | Likewise, inertia-scaled, with `combined_learning`'s superseded final runs forgetting exponentially. |
+| `20261108-023254-compare_feedforward` | The feedforward alone: report 002's setting continued, forgetting exponentially until it winds up and directionally, and both tuned settings. |
