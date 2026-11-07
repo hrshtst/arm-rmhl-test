@@ -21,7 +21,11 @@ with [skelarm](https://github.com/hrshtst/skelarm).
 > [003](reports/003-combined-learning/README.md) learns the two together: three
 > of four variants track to 1.1 to 1.5 mm in 10,000 reaches, past the 40-rad/s
 > PD that neither reached alone; the feedforward winds up if it forgets, and one
-> variant, tuned on one seed, runs away on 4 of 5 others.
+> variant, tuned on one seed, runs away on 4 of 5 others. Report
+> [004](reports/004-directional-forgetting/README.md) lets the feedforward forget
+> directionally: it no longer winds up, and the inertia-scaled combination tracks
+> to 0.8 mm on 4 of 5 seeds, the closest PD's error, while the raw-torque one,
+> retuned on one seed, holds on 1 of 5.
 
 ## Motivation
 
@@ -214,6 +218,7 @@ Each report has five parts:
 | [001 Feedback from scratch](reports/001-feedback-from-scratch/README.md) | RQ1: can RMHL learn feedback for a weak PD from one reward per reach? | Yes with the decorrelated rule, to 6 to 9 mm in 3,000 reaches and 4 to 6 mm in 10,000 on every seed, inertia-scaled with a chattering torque; the plain rule's gains run away on half of its seeds. |
 | [002 Feedback-error learning](reports/002-feedback-error-learning/README.md) | RQ1's supervised baseline: how fast and how close does an online learner given a target torque every control period come? | Feedback-error learning with an RLS readout passes the 20- and 28-rad/s PDs after 25 and 53 reaches, against 1,020 to 7,280 for RMHL, with the least effort, and settles at 4.6 mm, near the 4.2 mm of the best linear fit of the needed torque. |
 | [003 Combined learning](reports/003-combined-learning/README.md) | RQ1: learned together, do the feedforward of feedback-error learning and RMHL's feedback track more closely than either alone, and what does each do? | Yes for three of four variants: 1.1 to 1.5 mm in 10,000 reaches, past the 40-rad/s PD, with the least effort; the feedforward winds up if it forgets, and the inertia-scaled staged schedule, tuned on one seed, runs away on 4 of 5 others. |
+| [004 Directional forgetting](reports/004-directional-forgetting/README.md) | RQ1: forgetting only along each period's input, does the feedforward stop winding up, and does the combination then track more closely? | It stops winding up at every setting tried. Inertia-scaled, the combination tracks to 0.8 mm on 4 of 5 seeds, against 1.3 mm without forgetting; raw torque holds on 1 of 5, as its retuned feedback runs away on new seeds. The feedback's and the feedforward's constant torques drift apart. |
 
 ## Dependencies
 

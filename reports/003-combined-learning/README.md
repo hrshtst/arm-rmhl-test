@@ -272,6 +272,15 @@ start of each of the 200 control periods, have the singular values 68.9, 33.4,
   with a `delta` of 10, from 3.74 mm at 500 reaches to 4.47 mm at 10,000. With a
   `delta` of 100, it was still falling at 10,000, at 4.65 mm.
 
+**Note, 2026-11-08: forgetting directionally, the feedforward does not wind up.**
+Report [004](../004-directional-forgetting/README.md) repeats this section's sweep
+and report 002's setting continued, with rclib's RLS forgetting only along each
+period's input. No setting stays worse than the PD alone, through 3,000 reaches
+and through 10,000 at report 002's setting. The rows without forgetting repeat
+this report's bit for bit. Combined on the concurrent schedule and tuned again,
+the inertia-scaled variant tracks to a median of 0.8 mm on 4 of 5 seeds. The raw
+torque variant holds on 1 of 5.
+
 ### 3.3 The final runs
 
 ![The final runs for raw torque against report 001's feedback tuned alone and the PDs](results/20261106-151833-compare_raw/learning.png)
