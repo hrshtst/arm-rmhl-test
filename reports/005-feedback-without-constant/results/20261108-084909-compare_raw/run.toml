@@ -1,0 +1,6 @@
+config = "experiments/feedback_without_constant/compare_raw.toml"
+command = "experiments/compare_learning.py experiments/feedback_without_constant/compare_raw.toml"
+started = 2026-11-08 08:49:09+09:00
+host = "delbosque"
+commit = "6229c40b44f707cb8998d9d3398548e3e1c142e8"
+uncommitted_changes = false

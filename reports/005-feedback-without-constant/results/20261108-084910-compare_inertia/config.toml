@@ -1,0 +1,27 @@
+# The final runs for inertia-scaled feedback, concurrent schedule, forgetting
+# directionally: without the feedback's constant, against directional_forgetting's
+# with it (report 004) and combined_learning's with it but without forgetting
+# (report 003), and the feedforward alone, against PDs of feedback_from_scratch's grid.
+
+[[arm]]
+run = "results/feedback_without_constant/20261108-074908-final_concurrent_inertia"
+label = "without the constant"
+
+[[arm]]
+run = "results/directional_forgetting/20261107-224228-final_concurrent_inertia"
+label = "with the constant (report 004)"
+
+[[arm]]
+run = "results/combined_learning/20261106-134705-final_concurrent_inertia"
+label = "with it, no forgetting (report 003)"
+
+[[arm]]
+run = "results/directional_forgetting/20261107-224229-final_feedforward_alone_inertia"
+label = "feedforward alone (report 004)"
+
+[pd]
+run = "results/feedback_from_scratch/20261103-210822-pd_grid"
+marks = [[20.0, 0.7], [28.0, 0.7], [40.0, 0.4]]  # rad/s and damping ratio
+
+[plot]
+trials = "log"  # the feedforward converges in tens of trials, the feedback in thousands
