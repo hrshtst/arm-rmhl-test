@@ -74,9 +74,12 @@ again, and is the tracking as close? This belongs to RQ1 of the
 | --- | --- | --- |
 | `final_concurrent_raw.toml` | `learn_combined.py` | `directional_forgetting`'s final runs for raw torque without the feedback's constant: the feedforward at 0.999 with 100, the feedback at 250 with 0.32 N m; seeds 1 to 5, 10,000 trials |
 | `final_concurrent_inertia.toml` | `learn_combined.py` | likewise, inertia-scaled: the feedforward at 0.999 with 10, the feedback at 50 with 8 rad/s^2 |
+| `compare_raw.toml` | `compare_learning.py` | the final runs for raw torque, against `directional_forgetting`'s with the constant, `combined_learning`'s with it but without forgetting, the feedforward alone, the PD alone, and PDs of `feedback_from_scratch`'s grid |
+| `compare_inertia.toml` | `compare_learning.py` | likewise, inertia-scaled |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/feedback_without_constant/<configuration>.toml --workers 5
+uv run python experiments/compare_learning.py experiments/feedback_without_constant/compare_<scale>.toml
 ```
 
 ## Runs
