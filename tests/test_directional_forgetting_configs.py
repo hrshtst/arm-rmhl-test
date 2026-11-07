@@ -158,3 +158,16 @@ def test_the_feedforward_alone_is_a_concurrent_final_without_its_feedback():
         for table in ("feedback", "rule", "sweep"):  # without noise, the seeds change nothing
             del combined[table]
         assert load(path) == combined
+
+
+@pytest.mark.parametrize("scale", ["raw", "inertia"])
+def test_the_early_check_is_a_final_run_without_forgetting_for_100_trials(scale: str):
+    check, final = (
+        load(EXPERIMENT / f"early_without_forgetting_{scale}.toml"),
+        load(EXPERIMENT / f"final_concurrent_{scale}.toml"),
+    )
+
+    assert check["readout"].pop("forgetting") == 1.0
+    assert check["training"].pop("trials") == 100 <= check["training"]["evaluate_all_until"]  # every trial evaluated
+    del final["readout"]["forgetting"], final["training"]["trials"]
+    assert check == final

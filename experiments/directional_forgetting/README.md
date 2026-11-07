@@ -58,6 +58,11 @@ budget? This belongs to RQ1 of the [project README](../../README.md#research-que
    forgetting, its superseded ones forgetting exponentially at report 002's
    setting, the weak PD alone and the PDs of the grid: tracking error over the
    reaches, effort, peak torque, torque variation, and lesions.
+5. **Added after the final runs, not in the protocol:** four final runs ran away
+   over their first 10 trials, the feedback's weights growing before the
+   feedforward's. The same final runs without forgetting, a forgetting factor of
+   1 with the same `delta`, for their first 100 trials, ask whether they do so
+   without forgetting too (`early_without_forgetting_<scale>.toml`).
 
 ## Configurations
 
@@ -74,6 +79,8 @@ budget? This belongs to RQ1 of the [project README](../../README.md#research-que
 | `final_feedforward_alone_raw.toml` | `learn_combined.py` | the feedforward alone at raw torque's tuned setting, 0.999 with 100, 10,000 trials, once |
 | `final_concurrent_inertia.toml` | `learn_combined.py` | the final runs, inertia-scaled, at its tuned setting: the feedforward at 0.999 with 10, the feedback at 50 with 8 rad/s^2; seeds 1 to 5, 10,000 trials |
 | `final_feedforward_alone_inertia.toml` | `learn_combined.py` | the feedforward alone at the inertia-scaled tuned setting, 0.999 with 10, 10,000 trials, once |
+| `early_without_forgetting_raw.toml` | `learn_combined.py` | added after the final runs: raw torque's final runs without forgetting, a forgetting factor of 1 with 100, their first 100 trials |
+| `early_without_forgetting_inertia.toml` | `learn_combined.py` | added after the final runs: the inertia-scaled final runs without forgetting, 1 with 10, their first 100 trials |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/directional_forgetting/<configuration>.toml --workers 16
@@ -93,3 +100,8 @@ trials on seeds 1 to 5 for the final runs.
 | `20261107-211714-tune_concurrent_raw_round2` | 5 of 9 improve. A learning rate of 250 with 0.32 N m, 1.07 mm, stays the closest, now inside the grid, bit for bit the feedforward's round; ahead of 250 with 0.1 N m, 1.34 mm, and 80 with 0.32 N m, 1.45 mm. A learning rate of 800, and 250 with 1 N m, run away, to 655 to 715 mm. |
 | `20261107-211715-tune_concurrent_inertia_round2` | 5 of 9 improve. The closest is a learning rate of 50 with 8 rad/s^2, 1.52 mm, ahead of 160 with 2.5 rad/s^2, 1.61 mm, bit for bit the feedforward's round, and 160 with 0.8 rad/s^2, 1.63 mm; 50 with 8 rad/s^2 lies in the grid's corner. A learning rate of 500, and 160 with 8 rad/s^2, run away, to 374 to 761 mm. |
 | `20261107-221624-tune_concurrent_inertia_round3` | 4 of 6 improve. A learning rate of 50 with 8 rad/s^2, 1.52 mm, stays the closest, now inside the grids of rounds 2 and 3, ahead of 16 with 8 rad/s^2, 1.77 mm; the settings at 50 are bit for bit round 2's. 25 rad/s^2 runs away at both learning rates, to 445 and 539 mm. |
+| `20261107-201945-continued_feedforward_alone` | Improves, to 4.57 mm at 10,000 trials (4.39 mm at 1,000, 3.72 mm at its best, after 280). It never winds up; forgetting exponentially, the same setting stayed worse than the weak PD alone from trial 1,580 on. |
+| `20261107-221827-final_concurrent_raw` | 1 of 5 improves, seed 5, to 1.14 mm. The others run away, raising nothing: seeds 1, 3, and 4 from trials 2 and 3, and seed 2 from trial 5,740, after 0.80 mm at 5,400. In each, the feedback's weights grow before the feedforward's. |
+| `20261107-224228-final_concurrent_inertia` | 4 of 5 improve, to 0.74 to 1.16 mm; the median of the 5 is 0.83 mm. Seed 5 runs away over its first 10 trials, the feedback's weights growing first, raising nothing. |
+| `20261107-221827-final_feedforward_alone_raw` | Improves, to 4.54 mm at 10,000 trials, as at 1,000 (4.55 mm). |
+| `20261107-224229-final_feedforward_alone_inertia` | Improves, to 4.54 mm at 10,000 trials, as at 1,000; 3.83 mm at its best, after 87 trials. |
