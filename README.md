@@ -25,7 +25,12 @@ with [skelarm](https://github.com/hrshtst/skelarm).
 > [004](reports/004-directional-forgetting/README.md) lets the feedforward forget
 > directionally: it no longer winds up, and the inertia-scaled combination tracks
 > to 0.8 mm on 4 of 5 seeds, the closest PD's error, while the raw-torque one,
-> retuned on one seed, holds on 1 of 5.
+> retuned on one seed, holds on 1 of 5. Report
+> [005](reports/005-feedback-without-constant/README.md) removes the feedback's
+> constant torque, which the feedforward's bias shared: inertia-scaled, the two
+> parts' constants no longer drift apart, each part works without the other again,
+> and all 5 seeds track to 0.69 to 0.77 mm, below the closest PD; raw torque still
+> holds on 1 of 5.
 
 ## Motivation
 
@@ -219,6 +224,7 @@ Each report has five parts:
 | [002 Feedback-error learning](reports/002-feedback-error-learning/README.md) | RQ1's supervised baseline: how fast and how close does an online learner given a target torque every control period come? | Feedback-error learning with an RLS readout passes the 20- and 28-rad/s PDs after 25 and 53 reaches, against 1,020 to 7,280 for RMHL, with the least effort, and settles at 4.6 mm, near the 4.2 mm of the best linear fit of the needed torque. |
 | [003 Combined learning](reports/003-combined-learning/README.md) | RQ1: learned together, do the feedforward of feedback-error learning and RMHL's feedback track more closely than either alone, and what does each do? | Yes for three of four variants: 1.1 to 1.5 mm in 10,000 reaches, past the 40-rad/s PD, with the least effort; the feedforward winds up if it forgets, and the inertia-scaled staged schedule, tuned on one seed, runs away on 4 of 5 others. |
 | [004 Directional forgetting](reports/004-directional-forgetting/README.md) | RQ1: forgetting only along each period's input, does the feedforward stop winding up, and does the combination then track more closely? | It stops winding up at every setting tried. Inertia-scaled, the combination tracks to 0.8 mm on 4 of 5 seeds, against 1.3 mm without forgetting; raw torque holds on 1 of 5, as its retuned feedback runs away on new seeds. The feedback's and the feedforward's constant torques drift apart. |
+| [005 Feedback without its constant](reports/005-feedback-without-constant/README.md) | RQ1: does the constant input that the feedback shares with the feedforward cause report 004's drift? | Yes: without the feedback's constant, the inertia-scaled feedforward holds the constant torque and works without the feedback again, 10.0 mm against 159 mm, and all 5 seeds track to 0.69 to 0.77 mm, below the closest PD, with little scatter. Raw torque still holds on 1 of 5, its early run-aways happening either way. |
 
 ## Dependencies
 

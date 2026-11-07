@@ -461,6 +461,13 @@ The feedback's gains, medians over the seeds that improved:
   stiffness on joint 1 is 12.9 against 1.5 N m/rad without forgetting, and its
   damping 31.5 against 8.4 N m s/rad.
 
+**Note, 2026-11-08: without the feedback's constant, the split no longer drifts.**
+Report [005](../005-feedback-without-constant/README.md) repeats this report's final
+runs with only the feedback's constant removed. Inertia-scaled, the feedforward's
+bias rises to about the sum of the two constants without forgetting, 0.56 N m on
+joint 1, and stays near it. Without its feedback, the controller lags 10.0 mm, and
+all 5 seeds improve, to 0.69 to 0.77 mm. Raw torque still improves on 1 of 5 seeds.
+
 ## 4. Observations
 
 - **Directional forgetting removes the wind-up of a feedforward on low-rank
