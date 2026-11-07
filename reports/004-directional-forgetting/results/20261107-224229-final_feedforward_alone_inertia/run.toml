@@ -1,0 +1,6 @@
+config = "experiments/directional_forgetting/final_feedforward_alone_inertia.toml"
+command = "experiments/learn_combined.py experiments/directional_forgetting/final_feedforward_alone_inertia.toml"
+started = 2026-11-07 22:42:29+09:00
+host = "delbosque"
+commit = "06bdfe824c8b4e9690b5061f2116c64d48c7eb93"
+uncommitted_changes = false

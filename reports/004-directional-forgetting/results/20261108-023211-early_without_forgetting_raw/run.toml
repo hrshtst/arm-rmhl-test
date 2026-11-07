@@ -1,0 +1,6 @@
+config = "experiments/directional_forgetting/early_without_forgetting_raw.toml"
+command = "experiments/learn_combined.py experiments/directional_forgetting/early_without_forgetting_raw.toml --workers 5"
+started = 2026-11-08 02:32:11+09:00
+host = "delbosque"
+commit = "27bef11c391af8c63f899ba2aa636f81c5b70ab1"
+uncommitted_changes = false

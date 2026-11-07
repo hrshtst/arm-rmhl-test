@@ -1,0 +1,6 @@
+config = "experiments/directional_forgetting/final_feedforward_alone_raw.toml"
+command = "experiments/learn_combined.py experiments/directional_forgetting/final_feedforward_alone_raw.toml"
+started = 2026-11-07 22:18:27+09:00
+host = "delbosque"
+commit = "27ad9630677be5ee1ba1283b224be76fb14c2139"
+uncommitted_changes = false

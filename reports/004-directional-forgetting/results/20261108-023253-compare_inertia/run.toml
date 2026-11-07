@@ -1,0 +1,6 @@
+config = "experiments/directional_forgetting/compare_inertia.toml"
+command = "experiments/compare_learning.py experiments/directional_forgetting/compare_inertia.toml"
+started = 2026-11-08 02:32:53+09:00
+host = "delbosque"
+commit = "f46a82c1dc96226903bf1c62439547a6d3c5267f"
+uncommitted_changes = false

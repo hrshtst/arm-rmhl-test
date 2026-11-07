@@ -1,0 +1,6 @@
+config = "experiments/directional_forgetting/windup_feedforward_alone.toml"
+command = "experiments/learn_combined.py experiments/directional_forgetting/windup_feedforward_alone.toml --workers 16"
+started = 2026-11-07 20:19:45+09:00
+host = "delbosque"
+commit = "06a2c61a9e8ae4acadf26db5fbe3b8567b9aa125"
+uncommitted_changes = false
