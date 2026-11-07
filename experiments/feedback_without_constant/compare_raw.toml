@@ -5,15 +5,15 @@
 
 [[arm]]
 run = "results/feedback_without_constant/20261108-074908-final_concurrent_raw"
-label = "combined, without the constant"
+label = "without the constant"
 
 [[arm]]
 run = "results/directional_forgetting/20261107-221827-final_concurrent_raw"
-label = "combined, with the constant (report 004)"
+label = "with the constant (report 004)"
 
 [[arm]]
 run = "results/combined_learning/20261106-133311-final_concurrent_raw"
-label = "combined, with the constant, no forgetting (report 003)"
+label = "with it, no forgetting (report 003)"
 
 [[arm]]
 run = "results/directional_forgetting/20261107-221827-final_feedforward_alone_raw"
