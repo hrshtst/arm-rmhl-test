@@ -67,6 +67,8 @@ budget? This belongs to RQ1 of the [project README](../../README.md#research-que
 | `continued_feedforward_alone.toml` | `learn_combined.py` | the feedforward alone at report 002's setting, 0.9999 with 10, 10,000 trials, once |
 | `tune_readout_concurrent_raw.toml` | `learn_combined.py` | the feedforward's round, raw torque, the feedback at 250 and 0.32 N m: report 002's grid, 1,000 trials on seed 0 |
 | `tune_readout_concurrent_inertia.toml` | `learn_combined.py` | the feedforward's round, inertia-scaled, the feedback at 160 and 2.5 rad/s^2: the same grid |
+| `tune_concurrent_raw_round2.toml` | `learn_combined.py` | the feedback again, raw torque, with the feedforward's new best (0.999, 100): learning rates 80, 250, and 800 by amplitudes 0.1, 0.32, and 1 N m |
+| `tune_concurrent_inertia_round2.toml` | `learn_combined.py` | the feedback again, inertia-scaled, with the feedforward's new best (0.999, 10): learning rates 50, 160, and 500 by amplitudes 0.8, 2.5, and 8 rad/s^2 |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/directional_forgetting/<configuration>.toml --workers 16
@@ -80,3 +82,5 @@ trials on seeds 1 to 5 for the final runs.
 
 | Run | Result |
 | --- | --- |
+| `20261107-201945-tune_readout_concurrent_raw` | 4 of 16 improve, all with a `delta` of 100. The closest is a forgetting factor of 0.999, 1.07 mm (0.77 mm at 600 trials), ahead of 0.99, 1.38 mm, 0.9999, 1.89 mm, and 1, 2.27 mm, which is bit for bit `combined_learning`'s round 5 at this feedback setting. The 12 with a `delta` of 10 or less run away, to 516 to 712 mm, at every forgetting factor, raising nothing. The best is on the grid's edge in `delta`; the grid is not extended, as in `combined_learning`. |
+| `20261107-201946-tune_readout_concurrent_inertia` | 4 of 16 improve. The closest is a forgetting factor of 0.999 with a `delta` of 10, 1.61 mm (1.10 mm at 660 trials), ahead of 0.99 with 100, 1.94 mm, 0.9999 with 10, 2.36 mm, and 1 with 10, 2.99 mm. The rows at a forgetting factor of 1 are bit for bit `combined_learning`'s round. The other 12 run away, to 484 to 942 mm, raising nothing; at 0.99, forgetting exponentially, rclib raised within 2 trials. |

@@ -67,3 +67,35 @@ def test_the_raw_feedforwards_round_has_the_feedback_at_its_best_before_step_1_4
     assert config["rule"]["exploration"]["amplitude"] in round_4["sweep"]["rule.exploration.amplitude"]
     config["rule"]["learning_rate"] = counterpart["rule"]["learning_rate"]
     assert config == counterpart
+
+
+def in_readout_grid(config: dict[str, Any]) -> bool:
+    grid = load(REPO_ROOT / "experiments/feedback_error_learning/tune.toml")["sweep"]
+    return (
+        config["readout"]["forgetting"] in grid["readout.forgetting"]
+        and config["readout"]["delta"] in grid["readout.delta"]
+    )
+
+
+def without_tuned(config: dict[str, Any]) -> dict[str, Any]:
+    """The configuration without what the tuning rounds choose: the sweep and the settings of either learner."""
+    config = copy.deepcopy(config)
+    del config["sweep"]
+    for key in ("forgetting", "delta"):
+        del config["readout"][key]
+    del config["rule"]["learning_rate"], config["rule"]["exploration"]["amplitude"]
+    return config
+
+
+@pytest.mark.parametrize("path", sorted(EXPERIMENT.glob("tune_concurrent_*_round*.toml")), ids=lambda path: path.stem)
+def test_a_feedback_round_sweeps_around_the_feedforwards_round_with_a_setting_of_its_grid(path: Path):
+    config = load(path)
+    scale = path.stem.split("_")[2]  # tune_concurrent_<scale>_round<n>
+    readout_round = load(EXPERIMENT / f"tune_readout_concurrent_{scale}.toml")
+    sweep = config["sweep"]
+
+    assert without_tuned(config) == without_tuned(readout_round)
+    assert in_readout_grid(config)
+    assert list(sweep) == ["rule.learning_rate", "rule.exploration.amplitude"]
+    assert readout_round["rule"]["learning_rate"] in sweep["rule.learning_rate"]  # repeats the feedforward's round
+    assert readout_round["rule"]["exploration"]["amplitude"] in sweep["rule.exploration.amplitude"]
