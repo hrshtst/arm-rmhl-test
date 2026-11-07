@@ -4,6 +4,7 @@
 """The directional_forgetting configurations follow its protocol (see its README.md)."""
 
 import copy
+import itertools
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -87,15 +88,29 @@ def without_tuned(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
-@pytest.mark.parametrize("path", sorted(EXPERIMENT.glob("tune_concurrent_*_round*.toml")), ids=lambda path: path.stem)
-def test_a_feedback_round_sweeps_around_the_feedforwards_round_with_a_setting_of_its_grid(path: Path):
-    config = load(path)
-    scale = path.stem.split("_")[2]  # tune_concurrent_<scale>_round<n>
-    readout_round = load(EXPERIMENT / f"tune_readout_concurrent_{scale}.toml")
+def feedback_settings(config: dict[str, Any]) -> set[tuple[float, float]]:
+    """The learning rates by amplitudes a round runs: its sweep's grid, or the feedforward's round's one setting."""
     sweep = config["sweep"]
+    if "rule.learning_rate" not in sweep:
+        return {(config["rule"]["learning_rate"], config["rule"]["exploration"]["amplitude"])}
+    return set(itertools.product(sweep["rule.learning_rate"], sweep["rule.exploration.amplitude"]))
 
-    assert without_tuned(config) == without_tuned(readout_round)
+
+ROUNDS = sorted(EXPERIMENT.glob("tune_concurrent_*_round*.toml"))
+
+
+@pytest.mark.parametrize("path", ROUNDS, ids=lambda path: path.stem)
+def test_a_feedback_round_sweeps_past_the_round_before_and_repeats_some_of_it(path: Path):
+    config = load(path)
+    scale, n = path.stem.removeprefix("tune_concurrent_").split("_round")  # tune_concurrent_<scale>_round<n>
+    before = load(
+        EXPERIMENT
+        / (f"tune_readout_concurrent_{scale}.toml" if n == "2" else f"tune_concurrent_{scale}_round{int(n) - 1}.toml")
+    )
+
+    assert without_tuned(config) == without_tuned(before)
     assert in_readout_grid(config)
-    assert list(sweep) == ["rule.learning_rate", "rule.exploration.amplitude"]
-    assert readout_round["rule"]["learning_rate"] in sweep["rule.learning_rate"]  # repeats the feedforward's round
-    assert readout_round["rule"]["exploration"]["amplitude"] in sweep["rule.exploration.amplitude"]
+    assert config["readout"] == before["readout"] or n == "2"  # only the feedforward's round moves it
+    assert list(config["sweep"]) == ["rule.learning_rate", "rule.exploration.amplitude"]
+    assert feedback_settings(config) & feedback_settings(before)  # which must come out the same
+    assert feedback_settings(config) - feedback_settings(before)
