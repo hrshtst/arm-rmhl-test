@@ -11,6 +11,7 @@ experiments and live directly in this directory.
 | [`feedback_error_learning`](feedback_error_learning/README.md) | RQ1's supervised baseline: a feedforward learned by feedback-error learning with an RLS readout, for the same reach and weak PD | `learn_feedforward.py`, `compare_learning.py` | [002](../reports/002-feedback-error-learning/README.md) |
 | [`combined_learning`](combined_learning/README.md) | RQ1: the feedforward of feedback-error learning and the reward-modulated feedback learned together, with ablations of each, for the same reach and weak PD | `learn_combined.py`, `compare_learning.py` | [003](../reports/003-combined-learning/README.md) |
 | [`directional_forgetting`](directional_forgetting/README.md) | RQ1: `combined_learning`'s feedforward forgetting directionally, alone and with the reward-modulated feedback on the concurrent schedule, against its wind-up forgetting exponentially | `learn_combined.py`, `compare_learning.py` | [004](../reports/004-directional-forgetting/README.md) |
+| [`feedback_without_constant`](feedback_without_constant/README.md) | RQ1: `directional_forgetting`'s combined controller without the feedback's constant torque, against its drift of the constant between the two parts | `learn_combined.py`, `compare_learning.py` | to come |
 
 The runners:
 
