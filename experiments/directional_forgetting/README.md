@@ -81,9 +81,13 @@ budget? This belongs to RQ1 of the [project README](../../README.md#research-que
 | `final_feedforward_alone_inertia.toml` | `learn_combined.py` | the feedforward alone at the inertia-scaled tuned setting, 0.999 with 10, 10,000 trials, once |
 | `early_without_forgetting_raw.toml` | `learn_combined.py` | added after the final runs: raw torque's final runs without forgetting, a forgetting factor of 1 with 100, their first 100 trials |
 | `early_without_forgetting_inertia.toml` | `learn_combined.py` | added after the final runs: the inertia-scaled final runs without forgetting, 1 with 10, their first 100 trials |
+| `compare_raw.toml` | `compare_learning.py` | the final runs for raw torque, against `combined_learning`'s without forgetting, the feedforward alone at both settings, the PD alone, and PDs of `feedback_from_scratch`'s grid |
+| `compare_inertia.toml` | `compare_learning.py` | likewise, inertia-scaled, with `combined_learning`'s superseded final runs forgetting exponentially at report 002's setting |
+| `compare_feedforward.toml` | `compare_learning.py` | the feedforward alone: report 002's setting continued, forgetting exponentially and directionally, and both tuned settings forgetting directionally |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/directional_forgetting/<configuration>.toml --workers 16
+uv run python experiments/compare_learning.py experiments/directional_forgetting/compare_<name>.toml
 ```
 
 ## Runs
