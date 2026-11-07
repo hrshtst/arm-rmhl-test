@@ -14,12 +14,15 @@ damping matrix ``K_d``, and a constant ``c``. The feedback torque is the readout
 output ``y = K_p (q_ref - q) + K_d (dq_ref - dq) + c`` times a factor per joint, its
 scale: 1, so that the output is the torque (N m), or the joint's inertia, so that
 the output is in rad/s^2 like the PD's ``omega^2 e + 2 zeta omega de``. The
-exploration noise is added to the output, in its units.
+exploration noise is added to the output, in its units. A readout without the bias
+has no constant torque: ``c`` is zero, and its weights are read and recorded with a
+zero bias row, in the same shape (see :func:`readout_weights`).
 
 A configuration sets the feedback, the rule and the training in three tables:
 
 - ``[feedback]``: the ``scale``, ``"none"`` or ``"inertia"`` (see
-  :func:`feedback_scale`); without the table, ``"none"``.
+  :func:`feedback_scale`), and the ``constant``, ``false`` for a readout without the
+  bias (see :func:`feedback_constant`); without the table, ``"none"``, with the bias.
 
 - ``[rule]``: the ``preset`` of ``rclib.learning`` (such as ``"burms2015"``), its
   ``learning_rate``, a ``[rule.exploration]`` table and an optional
@@ -112,21 +115,47 @@ def make_rule(table: Mapping[str, Any]) -> learning.RewardModulatedHebbian:
     return getattr(learning, name)(float(table["learning_rate"]), **overrides)
 
 
-def make_model(rule: learning.RewardModulatedHebbian, joints: int) -> ESN:
-    """The tracking error, through an identity NVAR, to a reward-modulated readout with a bias.
+def make_model(rule: learning.RewardModulatedHebbian, joints: int, *, constant: bool = True) -> ESN:
+    """The tracking error, through an identity NVAR, to a reward-modulated readout, with a bias if ``constant``.
 
     The readout's weights start at zero, so its feedback starts at zero torque.
     """
     model = ESN()
     model.add_reservoir(reservoirs.Nvar(num_lags=1, polynomial_order=1))  # passes the error through
-    model.set_readout(readouts.RewardModulated(joints, rule, include_bias=True))
-    model.get_readout().setWeights(np.zeros((2 * joints + 1, joints)))
+    model.set_readout(readouts.RewardModulated(joints, rule, include_bias=constant))
+    model.get_readout().setWeights(np.zeros((2 * joints + int(constant), joints)))
     return model
+
+
+def readout_weights(model: ESN) -> Array:
+    """The readout's weights, shape ``(2 joints + 1, joints)``, the bias in the last row; zero without the bias."""
+    readout = model.get_readout()
+    weights = np.asarray(readout.getWeights())
+    if readout.getIncludeBias():
+        return weights
+    return np.vstack((weights, np.zeros((1, weights.shape[1]))))
+
+
+def set_weights(model: ESN, weights: Array) -> None:
+    """Set the readout's weights, given as :func:`readout_weights` reads them.
+
+    Raises
+    ------
+    ValueError
+        If the readout has no bias and the weights' bias row is not zero.
+    """
+    readout = model.get_readout()
+    if not readout.getIncludeBias():
+        if np.any(weights[-1] != 0.0):
+            msg = "a readout without the bias has no constant torque: the weights' bias row must be zero"
+            raise ValueError(msg)
+        weights = weights[:-1]
+    readout.setWeights(weights)
 
 
 def feedback_gains(model: ESN) -> tuple[Array, Array, Array]:
     """The model's stiffness matrix, damping matrix, and constant torque (see :func:`split_weights`)."""
-    return split_weights(np.asarray(model.get_readout().getWeights()))
+    return split_weights(readout_weights(model))
 
 
 def split_weights(weights: Array) -> tuple[Array, Array, Array]:
@@ -159,6 +188,25 @@ def feedback_scale(config: Mapping[str, Any], arm: Skeleton) -> Array:
         return np.diag(compute_mass_matrix(arm)).copy()
     msg = f"unknown feedback scale {scale!r}: use 'none' or 'inertia'"
     raise ValueError(msg)
+
+
+def feedback_constant(config: Mapping[str, Any]) -> bool:
+    """Whether the feedback's readout has the bias, by the ``[feedback]`` table's ``constant``; it has by default.
+
+    Without it, the feedback has no constant torque. Beside a feedforward with a bias
+    of its own, the two then share no constant input, so the split of a constant
+    torque between them is no longer free.
+
+    Raises
+    ------
+    ValueError
+        If the setting is not a boolean.
+    """
+    constant = config.get("feedback", {}).get("constant", True)
+    if not isinstance(constant, bool):
+        msg = f"the feedback's constant is true or false, not {constant!r}"
+        raise ValueError(msg)
+    return constant
 
 
 def run_trial(
@@ -241,7 +289,7 @@ def train(
             for trial in range(trials + 1):
                 if trial in evaluation_row:  # after `trial` trials learned from
                     row = evaluation_row[trial]
-                    weights[row] = model.get_readout().getWeights()
+                    weights[row] = readout_weights(model)
                     evaluations[row] = np.inf  # until the reach completes
                     evaluations[row], _ = run_trial(model, arm, reach, kp, kd, dead_zone, scale=scale, explore=False)
                 if trial < trials:
@@ -277,11 +325,11 @@ def training_settings(config: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def learn(config: Mapping[str, Any]) -> Training:
-    """Train a fresh model on the configuration's arm, reach, PD, feedback scale, rule and training."""
+    """Train a fresh model on the configuration's arm, reach, PD, feedback, rule and training."""
     arm = make_arm(config)
     reach = make_reach(config, arm)
     kp, kd = command_gains(config, arm)
-    model = make_model(make_rule(config["rule"]), arm.num_joints)
+    model = make_model(make_rule(config["rule"]), arm.num_joints, constant=feedback_constant(config))
     return train(model, arm, reach, kp, kd, scale=feedback_scale(config, arm), **training_settings(config))
 
 

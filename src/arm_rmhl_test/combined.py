@@ -141,7 +141,9 @@ def make_learners(config: Mapping[str, Any], joints: int) -> Learners:
         raise ValueError(msg)
     return Learners(
         feedforward.make_model(config["readout"]) if "readout" in config else None,
-        feedback.make_model(feedback.make_rule(config["rule"]), joints) if "rule" in config else None,
+        feedback.make_model(feedback.make_rule(config["rule"]), joints, constant=feedback.feedback_constant(config))
+        if "rule" in config
+        else None,
     )
 
 
@@ -282,7 +284,7 @@ def _feedback_weights(learners: Learners, joints: int) -> Array:
     """The reward-modulated readout's weights as they stand; zero without a feedback."""
     if learners.feedback is None:
         return np.zeros((2 * joints + 1, joints))
-    return np.asarray(learners.feedback.get_readout().getWeights())
+    return feedback.readout_weights(learners.feedback)
 
 
 def learn(config: Mapping[str, Any]) -> CombinedTraining:

@@ -44,10 +44,10 @@ def setup(config: dict[str, Any]):
     return arm, reach, kp, kd
 
 
-def both() -> tuple[Learners, ESN, ESN]:
+def both(*, constant: bool = True) -> tuple[Learners, ESN, ESN]:
     """Fresh learners of both kinds, from zero weights, and their RLS and reward-modulated models."""
     rls = feedforward.make_model(READOUT)
-    rmhl = feedback.make_model(feedback.make_rule(RULE), joints=2)
+    rmhl = feedback.make_model(feedback.make_rule(RULE), joints=2, constant=constant)
     return Learners(rls, rmhl), rls, rmhl
 
 
@@ -192,17 +192,20 @@ def test_a_reach_that_learns_neither_changes_no_learning_state(setup):
         rmhl.reinforce(-1.0)
 
 
-def test_the_stored_weights_replay_the_evaluations(setup):
+@pytest.mark.parametrize("constant", [True, False])
+def test_the_stored_weights_replay_the_evaluations(setup, constant: bool):
     arm, reach, kp, kd = setup
     scale = np.array([0.5, 2.0])
+    learners = both(constant=constant)[0]
 
     training = train(
-        both()[0], arm, reach, kp, kd, schedule=CONCURRENT, scale=scale, trials=3, dead_zone=0.0, evaluate_every=1
+        learners, arm, reach, kp, kd, schedule=CONCURRENT, scale=scale, trials=3, dead_zone=0.0, evaluate_every=1
     )
 
+    assert np.any(training.weights[-1, -1] != 0.0) == constant  # without the constant, a zero bias row
     for row in range(len(training.evaluated_at)):
-        model = feedback.make_model(feedback.make_rule(RULE), arm.num_joints)
-        model.get_readout().setWeights(training.weights[row])
+        model = feedback.make_model(feedback.make_rule(RULE), arm.num_joints, constant=constant)
+        feedback.set_weights(model, training.weights[row])
         torque = combine(
             feedforward.frozen_feedforward(training.feedforward_weights[row], reach),
             feedback.feedback_torque(model, scale, explore=False),
@@ -246,6 +249,10 @@ def test_the_tables_give_the_learners_and_the_schedule(config: dict[str, Any]):
     assert learners.feedforward is not None
     assert learners.feedback is not None
     np.testing.assert_array_equal(learners.feedback.get_readout().getWeights(), 0.0)
+    assert learners.feedback.get_readout().getIncludeBias()
+    without = make_learners(config | {"readout": READOUT, "feedback": {"constant": False}, "rule": RULE}, joints=2)
+    assert without.feedback is not None
+    assert not without.feedback.get_readout().getIncludeBias()
     assert make_learners(config | {"rule": RULE}, joints=2).feedforward is None
     assert make_learners(config | {"readout": READOUT}, joints=2).feedback is None
     with pytest.raises(ValueError, match="nothing to learn"):

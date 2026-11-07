@@ -14,12 +14,15 @@ from arm_rmhl_test.arm import command_gains, make_arm, make_reach, run_reach, tr
 from arm_rmhl_test.feedback import (
     Training,
     evaluation_trials,
+    feedback_constant,
     feedback_gains,
     feedback_scale,
     learn,
     make_model,
     make_rule,
+    readout_weights,
     run_trial,
+    set_weights,
     split_weights,
     summarize,
     train,
@@ -87,6 +90,47 @@ def test_the_weights_read_as_stiffness_damping_and_a_constant_torque():
 
     torque = model.act(error.reshape(1, -1), explore=False)[0]
     np.testing.assert_allclose(torque, stiffness @ error[:2] + damping @ error[2:] + constant)
+
+
+def test_without_the_constant_the_readout_has_no_bias_and_reads_with_a_zero_bias_row():
+    model = make_model(make_rule(RULE), joints=2, constant=False)
+    weights = np.random.default_rng(0).normal(size=(5, 2))
+    weights[-1] = 0.0
+    error = np.array([0.1, -0.2, 0.3, 0.4])
+
+    assert not model.get_readout().getIncludeBias()
+    np.testing.assert_array_equal(readout_weights(model), np.zeros((5, 2)))
+    set_weights(model, weights)
+    np.testing.assert_array_equal(model.get_readout().getWeights(), weights[:-1])
+    np.testing.assert_array_equal(readout_weights(model), weights)
+    stiffness, damping, constant = feedback_gains(model)
+    torque = model.act(error.reshape(1, -1), explore=False)[0]
+    np.testing.assert_allclose(torque, stiffness @ error[:2] + damping @ error[2:])
+    np.testing.assert_array_equal(constant, 0.0)
+    np.testing.assert_array_equal(model.act(np.zeros((1, 4)), explore=False)[0], 0.0)  # no error, no torque
+    weights[-1, 0] = 0.1
+    with pytest.raises(ValueError, match="bias row must be zero"):
+        set_weights(model, weights)
+
+
+def test_with_the_constant_the_weights_are_set_and_read_as_they_are():
+    model = make_model(make_rule(RULE), joints=2)
+    weights = np.random.default_rng(0).normal(size=(5, 2))
+
+    set_weights(model, weights)
+
+    np.testing.assert_array_equal(model.get_readout().getWeights(), weights)
+    np.testing.assert_array_equal(readout_weights(model), weights)
+
+
+def test_without_the_constant_a_fresh_model_explores_with_the_same_noise(setup):
+    arm, reach, kp, kd = setup
+    runs = [
+        run_trial(make_model(make_rule(RULE), arm.num_joints, constant=constant), arm, reach, kp, kd, 0.0)[1]
+        for constant in (True, False)
+    ]
+
+    np.testing.assert_array_equal(runs[0].feedback, runs[1].feedback)  # a seed draws the same noise
 
 
 def test_a_noise_free_reach_changes_no_learning_state(setup):
@@ -184,6 +228,25 @@ def test_learning_from_a_configuration_trains_a_fresh_model(setup, config: dict[
     np.testing.assert_array_equal(training.weights, expected.weights)
 
 
+def test_learning_without_the_constant_records_a_zero_bias_row(setup, config: dict[str, Any]):
+    arm, reach, kp, kd = setup
+    config |= {
+        "feedback": {"constant": False},
+        "rule": RULE,
+        "training": {"trials": 4, "dead_zone": 0.0, "evaluate_every": 2},
+    }
+    model = make_model(make_rule(RULE), arm.num_joints, constant=False)
+
+    training = learn(config)
+
+    expected = train(model, arm, reach, kp, kd, trials=4, dead_zone=0.0, evaluate_every=2)
+    np.testing.assert_array_equal(training.errors, expected.errors)
+    np.testing.assert_array_equal(training.weights, expected.weights)
+    assert np.any(training.weights[-1] != 0.0)
+    np.testing.assert_array_equal(training.weights[:, -1], 0.0)
+    np.testing.assert_array_equal(training.weights[-1, :-1], model.get_readout().getWeights())
+
+
 def training(evaluations: list[float], diverged: str | None = None) -> Training:
     """A training of four trials evaluated every two, whose final weights count up from 0."""
     weights = np.full((len(evaluations), 5, 2), np.nan)
@@ -240,6 +303,15 @@ def test_the_feedback_scale_is_one_or_each_joints_inertia(config: dict[str, Any]
     np.testing.assert_array_equal(feedback_scale({"feedback": {"scale": "inertia"}}, arm), inertia)
     with pytest.raises(ValueError, match="unknown feedback scale"):
         feedback_scale({"feedback": {"scale": "mass"}}, arm)
+
+
+def test_the_feedback_has_the_constant_unless_its_table_turns_it_off(config: dict[str, Any]):
+    assert feedback_constant(config)
+    assert feedback_constant({"feedback": {"scale": "inertia"}})
+    assert feedback_constant({"feedback": {"constant": True}})
+    assert not feedback_constant({"feedback": {"constant": False}})
+    with pytest.raises(ValueError, match="true or false"):
+        feedback_constant({"feedback": {"constant": "no"}})
 
 
 def test_the_scaled_feedback_torque_is_the_output_times_the_scale(setup):
