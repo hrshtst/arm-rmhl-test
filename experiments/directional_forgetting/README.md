@@ -70,6 +70,8 @@ budget? This belongs to RQ1 of the [project README](../../README.md#research-que
 | `tune_concurrent_raw_round2.toml` | `learn_combined.py` | the feedback again, raw torque, with the feedforward's new best (0.999, 100): learning rates 80, 250, and 800 by amplitudes 0.1, 0.32, and 1 N m |
 | `tune_concurrent_inertia_round2.toml` | `learn_combined.py` | the feedback again, inertia-scaled, with the feedforward's new best (0.999, 10): learning rates 50, 160, and 500 by amplitudes 0.8, 2.5, and 8 rad/s^2 |
 | `tune_concurrent_inertia_round3.toml` | `learn_combined.py` | round 2 past its corner, inertia-scaled: learning rates 16 and 50 by amplitudes 2.5, 8, and 25 rad/s^2 |
+| `final_concurrent_raw.toml` | `learn_combined.py` | the final runs, raw torque, at its tuned setting: the feedforward at 0.999 with 100, the feedback at 250 with 0.32 N m; seeds 1 to 5, 10,000 trials |
+| `final_feedforward_alone_raw.toml` | `learn_combined.py` | the feedforward alone at raw torque's tuned setting, 0.999 with 100, 10,000 trials, once |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/directional_forgetting/<configuration>.toml --workers 16

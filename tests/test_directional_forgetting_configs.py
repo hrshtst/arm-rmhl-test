@@ -114,3 +114,47 @@ def test_a_feedback_round_sweeps_past_the_round_before_and_repeats_some_of_it(pa
     assert list(config["sweep"]) == ["rule.learning_rate", "rule.exploration.amplitude"]
     assert feedback_settings(config) & feedback_settings(before)  # which must come out the same
     assert feedback_settings(config) - feedback_settings(before)
+
+
+def tuned_settings(scale: str) -> set[tuple[float, float]]:
+    """Every feedback setting that a tuning round of one scale ran."""
+    rounds = [
+        EXPERIMENT / f"tune_readout_concurrent_{scale}.toml",
+        *EXPERIMENT.glob(f"tune_concurrent_{scale}_round*.toml"),
+    ]
+    return set().union(*(feedback_settings(load(path)) for path in rounds))
+
+
+FINALS = sorted(EXPERIMENT.glob("final_concurrent_*.toml"))
+
+
+@pytest.mark.parametrize("path", FINALS, ids=lambda path: path.stem)
+def test_a_final_run_is_a_tuned_setting_on_seeds_1_to_5_for_10000_trials(path: Path):
+    config = load(path)
+    scale = path.stem.removeprefix("final_concurrent_")
+    final, tuning = without_tuned(config), without_tuned(load(EXPERIMENT / f"tune_readout_concurrent_{scale}.toml"))
+    for fixed in (final, tuning):  # the seed and the budget are the final runs' own
+        del fixed["rule"]["exploration"]["seed"], fixed["training"]["trials"]
+
+    assert final == tuning
+    assert config["training"]["trials"] == 10000
+    assert config["sweep"] == {"rule.exploration.seed": [1, 2, 3, 4, 5]}
+    assert (config["rule"]["learning_rate"], config["rule"]["exploration"]["amplitude"]) in tuned_settings(scale)
+    assert in_readout_grid(config)
+
+
+@pytest.mark.parametrize("path", FINALS, ids=lambda path: path.stem)
+def test_a_final_run_is_combined_learnings_but_for_the_tuned_settings_and_the_forgetting_method(path: Path):
+    config, counterpart = exponential(load(path)), load(COMBINED / path.name)
+
+    assert without_tuned(config) == without_tuned(counterpart)
+
+
+def test_the_feedforward_alone_is_a_concurrent_final_without_its_feedback():
+    paths = list(EXPERIMENT.glob("final_feedforward_alone_*.toml"))
+    assert paths
+    for path in paths:
+        combined = load(EXPERIMENT / f"final_concurrent_{path.stem.removeprefix('final_feedforward_alone_')}.toml")
+        for table in ("feedback", "rule", "sweep"):  # without noise, the seeds change nothing
+            del combined[table]
+        assert load(path) == combined
