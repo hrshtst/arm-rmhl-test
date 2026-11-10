@@ -74,3 +74,40 @@ def test_tuning_the_feedback_for_speed_changes_only_its_setting_and_the_budget(s
     assert config["rule"]["exploration"]["seed"] == 0
     assert "constant" not in config["feedback"]  # report 001's: with the constant
     assert without_tuned(config) == without_tuned(base)
+
+
+def final_seeds(config: dict[str, Any]) -> list[int]:
+    return config["sweep"]["rule.exploration.seed"]
+
+
+@pytest.mark.parametrize(("scale", "rate", "amplitude"), [("raw", 16.0, 51.2), ("inertia", 50.0, 32.0)])
+def test_a_final_staged_run_is_the_tuned_setting_on_new_seeds(scale: str, rate: float, amplitude: float):
+    config = load(EXPERIMENT / f"final_staged_{scale}.toml")
+    tuning = load(EXPERIMENT / f"tune_staged_{scale}.toml")
+
+    assert final_seeds(config) == [1, 2, 3, 4, 5]
+    assert (config["rule"]["learning_rate"], config["rule"]["exploration"]["amplitude"]) == (rate, amplitude)
+    assert config["training"] == {**tuning["training"], "trials": 10000}
+    assert without_tuned(config) == without_tuned(tuning)
+
+
+@pytest.mark.parametrize("scale", SCALES)
+def test_the_feedback_without_the_constant_is_report_001s_but_for_it(scale: str):
+    config = load(EXPERIMENT / f"final_feedback_no_constant_{scale}.toml")
+    base = load(EXPERIMENTS / "feedback_from_scratch" / f"long_decorrelated_{scale}.toml")
+
+    assert config["feedback"].pop("constant") is False
+    assert config["training"].pop("evaluate_all_until") == 100
+    assert config == base
+
+
+@pytest.mark.parametrize(("scale", "rate", "amplitude"), [("raw", 5.0, 6.4), ("inertia", 35.0, 11.0)])
+def test_the_feedback_tuned_for_speed_is_report_001s_but_for_its_setting(scale: str, rate: float, amplitude: float):
+    config = load(EXPERIMENT / f"final_feedback_short_{scale}.toml")
+    base = load(EXPERIMENTS / "feedback_from_scratch" / f"long_decorrelated_{scale}.toml")
+
+    assert final_seeds(config) == [1, 2, 3, 4, 5]
+    assert (config["rule"]["learning_rate"], config["rule"]["exploration"]["amplitude"]) == (rate, amplitude)
+    assert config["training"] == {**base["training"], "trials": 3000, "evaluate_all_until": 100}
+    assert "constant" not in config["feedback"]
+    assert without_tuned(config) == without_tuned(base)

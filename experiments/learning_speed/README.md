@@ -87,6 +87,11 @@ controller ran away, so they test that setting more than the speed.
 | `tune_staged_<scale>_round3.toml` | `learn_combined.py` | round 3: larger amplitudes still, as round 2's best lay on the grid's edge again |
 | `tune_feedback_short_inertia_round2.toml` | `learn_feedback.py` | round 2: a finer grid around round 1's best, which is report 001's setting |
 | `tune_feedback_short_raw_round2.toml` | `learn_feedback.py` | round 2: larger amplitudes, around round 1's best learning rate, whose amplitude lay on the grid's edge |
+| `final_staged_inertia.toml` | `learn_combined.py` | the staged schedule, the feedback at 50 with 32 rad/s^2; seeds 1 to 5, 10,000 trials |
+| `final_staged_raw.toml` | `learn_combined.py` | likewise for raw torque, at 16 with 51.2 N m. The amplitude is still on the grid's edge, and the search stops there: it is about 20 times the 2.5 N m peak torque the reach needs |
+| `final_feedback_no_constant_<scale>.toml` | `learn_feedback.py` | report 001's feedback alone at its tuned setting, without the constant; seeds 1 to 5, 10,000 trials |
+| `final_feedback_short_inertia.toml` | `learn_feedback.py` | the feedback alone tuned for 300 trials, at 35 with 11 rad/s^2; seeds 1 to 5, 3,000 trials |
+| `final_feedback_short_raw.toml` | `learn_feedback.py` | likewise for raw torque, at 5 with 6.4 N m |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/learning_speed/tune_staged_<scale>.toml --workers 24
