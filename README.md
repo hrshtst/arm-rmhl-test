@@ -30,7 +30,11 @@ with [skelarm](https://github.com/hrshtst/skelarm).
 > constant torque, which the feedforward's bias shared: inertia-scaled, the two
 > parts' constants no longer drift apart, each part works without the other again,
 > and all 5 seeds track to 0.69 to 0.77 mm, below the closest PD; raw torque still
-> holds on 1 of 5.
+> holds on 1 of 5. Report [006](reports/006-learning-speed/README.md) counts the
+> reaches: inertia-scaled, that controller passes the 20-, 28-, and 40-rad/s PDs
+> after 11, 25, and 99 reaches, against 920, 2,820, and more than 10,000 for the
+> fastest feedback alone, even tuned for speed; most of the early speed is the
+> feedforward's.
 
 ## Motivation
 
@@ -225,6 +229,7 @@ Each report has five parts:
 | [003 Combined learning](reports/003-combined-learning/README.md) | RQ1: learned together, do the feedforward of feedback-error learning and RMHL's feedback track more closely than either alone, and what does each do? | Yes for three of four variants: 1.1 to 1.5 mm in 10,000 reaches, past the 40-rad/s PD, with the least effort; the feedforward winds up if it forgets, and the inertia-scaled staged schedule, tuned on one seed, runs away on 4 of 5 others. |
 | [004 Directional forgetting](reports/004-directional-forgetting/README.md) | RQ1: forgetting only along each period's input, does the feedforward stop winding up, and does the combination then track more closely? | It stops winding up at every setting tried. Inertia-scaled, the combination tracks to 0.8 mm on 4 of 5 seeds, against 1.3 mm without forgetting; raw torque holds on 1 of 5, as its retuned feedback runs away on new seeds. The feedback's and the feedforward's constant torques drift apart. |
 | [005 Feedback without its constant](reports/005-feedback-without-constant/README.md) | RQ1: does the constant input that the feedback shares with the feedforward cause report 004's drift? | Yes: without the feedback's constant, the inertia-scaled feedforward holds the constant torque and works without the feedback again, 10.0 mm against 159 mm, and all 5 seeds track to 0.69 to 0.77 mm, below the closest PD, with little scatter. Raw torque still holds on 1 of 5, its early run-aways happening either way. |
+| [006 Learning speed](reports/006-learning-speed/README.md) | RQ1: does the feedforward make the reward-modulated feedback track as closely as a stiffer PD in fewer reaches than the feedback needs alone? | Yes, inertia-scaled, at report 005's settings: 11, 25, and 99 reaches to the 20-, 28-, and 40-rad/s PDs, against 920, 2,820, and more than 10,000 for the fastest feedback alone, even tuned for speed, with every seed apart. The feedforward alone passes the first two in 20 and 40. The staged schedule runs away on 2 of 5 seeds, and raw torque is not steady. |
 
 ## Dependencies
 

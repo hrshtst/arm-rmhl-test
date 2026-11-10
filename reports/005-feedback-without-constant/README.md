@@ -229,6 +229,14 @@ without:
   it held with it. Seed 2 held without the constant, to 0.80 mm, where it ran away
   from reach 5,740 with it.
 
+**Note, 2026-11-11: how much sooner than the feedback alone.** Report
+[006](../006-learning-speed/README.md) counts the reaches to each PD's error.
+Inertia-scaled, this report's controller passes the 20-, 28-, and 40-rad/s PDs
+after 11, 25, and 99 reaches; the fastest feedback alone, including report 001's
+feedback without its constant and one tuned for 300 reaches, after 920 and 2,820,
+and not the third in 10,000. The feedforward alone passes the first two after 20
+and 40.
+
 ### 3.2 What each part does
 
 Each combined final controller replayed as learned, without its feedback, and

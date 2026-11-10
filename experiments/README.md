@@ -12,7 +12,7 @@ experiments and live directly in this directory.
 | [`combined_learning`](combined_learning/README.md) | RQ1: the feedforward of feedback-error learning and the reward-modulated feedback learned together, with ablations of each, for the same reach and weak PD | `learn_combined.py`, `compare_learning.py` | [003](../reports/003-combined-learning/README.md) |
 | [`directional_forgetting`](directional_forgetting/README.md) | RQ1: `combined_learning`'s feedforward forgetting directionally, alone and with the reward-modulated feedback on the concurrent schedule, against its wind-up forgetting exponentially | `learn_combined.py`, `compare_learning.py` | [004](../reports/004-directional-forgetting/README.md) |
 | [`feedback_without_constant`](feedback_without_constant/README.md) | RQ1: `directional_forgetting`'s combined controller without the feedback's constant torque, against its drift of the constant between the two parts | `learn_combined.py`, `compare_learning.py` | [005](../reports/005-feedback-without-constant/README.md) |
-| [`learning_speed`](learning_speed/README.md) | RQ1: how many reaches the combined controller needs to track as closely as a stiffer PD, against each learner alone, the feedback tuned both for 1,000 reaches and for 300 | `learn_combined.py`, `learn_feedback.py`, `compare_learning.py` | |
+| [`learning_speed`](learning_speed/README.md) | RQ1: how many reaches the combined controller needs to track as closely as a stiffer PD, against each learner alone, the feedback tuned both for 1,000 reaches and for 300 | `learn_combined.py`, `learn_feedback.py`, `compare_learning.py` | [006](../reports/006-learning-speed/README.md) |
 
 The runners:
 
