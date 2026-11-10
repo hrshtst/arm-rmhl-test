@@ -92,8 +92,11 @@ controller ran away, so they test that setting more than the speed.
 | `final_feedback_no_constant_<scale>.toml` | `learn_feedback.py` | report 001's feedback alone at its tuned setting, without the constant; seeds 1 to 5, 10,000 trials |
 | `final_feedback_short_inertia.toml` | `learn_feedback.py` | the feedback alone tuned for 300 trials, at 35 with 11 rad/s^2; seeds 1 to 5, 3,000 trials |
 | `final_feedback_short_raw.toml` | `learn_feedback.py` | likewise for raw torque, at 5 with 6.4 N m |
+| `compare_inertia.toml` | `compare_learning.py` | the final runs for inertia-scaled exploration: the combined controller, concurrent (report 005) and staged, the feedforward alone (report 004), and the feedback alone, tuned in report 001, without its constant, and tuned for speed, against the PD alone and PDs of `feedback_from_scratch`'s grid |
+| `compare_raw.toml` | `compare_learning.py` | likewise, raw torque |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/learning_speed/tune_staged_<scale>.toml --workers 24
 uv run python experiments/learn_feedback.py experiments/learning_speed/tune_feedback_short_<scale>.toml --workers 24
+uv run python experiments/compare_learning.py experiments/learning_speed/compare_<scale>.toml
 ```

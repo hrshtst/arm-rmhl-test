@@ -1,0 +1,35 @@
+# The final runs for inertia-scaled exploration: the combined controller, concurrent
+# (report 005) and staged (this experiment), the feedforward alone (report 004), and
+# the feedback alone, tuned in report 001, without its constant, and tuned for speed,
+# against PDs of feedback_from_scratch's grid.
+
+[[arm]]
+run = "results/feedback_without_constant/20261108-074908-final_concurrent_inertia"
+label = "combined, concurrent (report 005)"
+
+[[arm]]
+run = "results/learning_speed/20261111-020819-final_staged_inertia"
+label = "combined, staged"
+
+[[arm]]
+run = "results/directional_forgetting/20261107-224229-final_feedforward_alone_inertia"
+label = "feedforward alone (report 004)"
+
+[[arm]]
+run = "results/feedback_from_scratch/20261104-002706-long_decorrelated_inertia"
+label = "feedback alone (report 001)"
+
+[[arm]]
+run = "results/learning_speed/20261111-020819-final_feedback_no_constant_inertia"
+label = "feedback alone, no constant"
+
+[[arm]]
+run = "results/learning_speed/20261111-020819-final_feedback_short_inertia"
+label = "feedback alone, tuned for speed"
+
+[pd]
+run = "results/feedback_from_scratch/20261103-210822-pd_grid"
+marks = [[20.0, 0.7], [28.0, 0.7], [40.0, 0.4]]  # rad/s and damping ratio
+
+[plot]
+trials = "log"  # the feedforward converges in tens of trials, the feedback in thousands
