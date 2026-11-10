@@ -1,0 +1,6 @@
+config = "experiments/learning_speed/tune_feedback_short_raw.toml"
+command = "experiments/learn_feedback.py experiments/learning_speed/tune_feedback_short_raw.toml --workers 24"
+started = 2026-11-11 01:38:36+09:00
+host = "delbosque"
+commit = "1a4db35ac33762a47c1fae13a18a837fd4db2541"
+uncommitted_changes = true

@@ -1,0 +1,6 @@
+config = "experiments/learning_speed/final_staged_inertia.toml"
+command = "experiments/learn_combined.py experiments/learning_speed/final_staged_inertia.toml --workers 5"
+started = 2026-11-11 02:08:19+09:00
+host = "delbosque"
+commit = "446b97b7281353745a9bc53516f0cc83d466f095"
+uncommitted_changes = false

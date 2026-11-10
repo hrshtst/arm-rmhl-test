@@ -1,0 +1,6 @@
+config = "experiments/learning_speed/tune_staged_inertia_round3.toml"
+command = "experiments/learn_combined.py experiments/learning_speed/tune_staged_inertia_round3.toml --workers 9"
+started = 2026-11-11 01:57:57+09:00
+host = "delbosque"
+commit = "ce38b0ad3679711cd06413f93a4959c47a2d6fca"
+uncommitted_changes = false
