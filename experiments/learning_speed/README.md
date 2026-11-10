@@ -100,3 +100,36 @@ uv run python experiments/learn_combined.py experiments/learning_speed/tune_stag
 uv run python experiments/learn_feedback.py experiments/learning_speed/tune_feedback_short_<scale>.toml --workers 24
 uv run python experiments/compare_learning.py experiments/learning_speed/compare_<scale>.toml
 ```
+
+## Runs
+
+Under `results/learning_speed/` in the storage root. Tuning errors are the
+noise-free tracking errors at the last trial on seed 0; final errors are at the
+last trial, on seeds 1 to 5. A learning rate is written with its amplitude, as
+"50 with 32 rad/s^2".
+
+| Run | Result |
+| --- | --- |
+| `20261111-011322-tune_staged_inertia` | 15 of 24 improve. The closest is 50 with 8 rad/s^2, 1.09 mm, on the grid's largest amplitude; then 16 with 8 rad/s^2, 1.22 mm. The other 9 run away, to 445 to 720 mm, raising nothing. |
+| `20261111-012410-tune_staged_raw` | 21 of 24 improve. The closest is 25 with 3.2 N m, 0.95 mm, on the grid's largest amplitude; then 8 with 3.2 N m, 1.14 mm. Three run away, to 356 to 715 mm. |
+| `20261111-013436-tune_feedback_short_inertia` | 6 of 24 improve. The closest at 300 trials is report 001's setting, 50 with 8 rad/s^2, 39.7 mm; then 25 with 8 rad/s^2, 53.0 mm. The other 18 run away, to 513 to 1,205 mm. |
+| `20261111-013836-tune_feedback_short_raw` | 12 of 24 improve. The closest is 5 with 6.4 N m, 21.4 mm, on the grid's largest amplitude; then report 001's setting, 2.5 with 3.2 N m, 32.3 mm. Neighbours of the closest differ widely: 2.5 and 10 with 6.4 N m end at 111 and 113 mm. |
+| `20261111-014330-tune_staged_inertia_round2` | 12 of 12 improve. The closest is 50 with 32 rad/s^2, 0.72 mm, on the grid's largest amplitude again; 100 with 32 rad/s^2 ends at 20.1 mm. |
+| `20261111-014330-tune_staged_raw_round2` | 6 of 12 improve. The closest is 8 with 12.8 N m, 0.36 mm, on the grid's largest amplitude again; then 16 with 12.8 N m, 0.43 mm. |
+| `20261111-015336-tune_feedback_short_inertia_round2` | 7 of 9 improve. The closest is 35 with 11 rad/s^2, 38.0 mm, a near tie with report 001's setting, 39.7 mm. 16 rad/s^2 had run away at every learning rate but one in round 1. |
+| `20261111-015336-tune_feedback_short_raw_round2` | 13 of 15 improve. 5 with 6.4 N m, 21.4 mm, stays the closest, now inside the grid; the next is 7 with 6.4 N m, 41.6 mm. Larger amplitudes end at 65 to 142 mm. |
+| `20261111-015757-tune_staged_inertia_round3` | 3 of 9 improve. 50 with 32 rad/s^2, 0.72 mm, stays the closest, now inside the grid. Every setting at 64 and 128 rad/s^2 runs away, to 237 to 708 mm; 100 with 32 rad/s^2 reaches 3.83 mm at trial 87, then climbs to 20.1 mm. |
+| `20261111-015757-tune_staged_raw_round3` | 9 of 9 improve. The closest is 16 with 51.2 N m, 0.14 mm, on the grid's largest amplitude a third time. The search stops there: 51.2 N m is about 20 times the 2.5 N m peak torque that the reach needs. |
+| `20261111-020819-final_staged_inertia` | 3 of 5 improve, to 0.52 to 0.59 mm. The feedforward learns alone for the first 100 trials, bit for bit report 004's feedforward alone, to 3.9 mm. Within 20 trials of the feedback joining, seeds 1, 3, and 4 are at 0.9 mm; seeds 2 and 5 are at 344 and 472 mm, and stay above 200 mm to the end. |
+| `20261111-020819-final_staged_raw` | 4 of 5 improve, at the last trial. The feedforward learns alone for the first 100 trials, to 6.8 mm. Within 200 trials of the feedback joining, every seed ran away, to 424 to 681 mm. Seeds 2 and 5 were back below 1 mm by trial 1,000, seed 3 later, and they end at 0.06 to 0.26 mm; seed 1 ends at 3.3 mm. Seeds 1, 3, and 5 still spend 9 to 17 % of their evaluations after trial 5,000 above the weak PD alone's 170 mm. Seed 4 ends at 473 mm. |
+| `20261111-020819-final_feedback_no_constant_inertia` | 5 of 5 improve, to 4.0 to 5.8 mm at 10,000 trials. |
+| `20261111-020819-final_feedback_no_constant_raw` | 5 of 5 improve, to 5.0 to 5.3 mm. |
+| `20261111-020819-final_feedback_short_inertia` | 5 of 5 improve, to 5.6 to 15.7 mm at 3,000 trials. |
+| `20261111-020819-final_feedback_short_raw` | 4 of 5 improve, to 4.7 to 25.1 mm. Seed 1 runs away by trial 100, to 686 mm at the end. |
+| `20261111-034037-compare_inertia` | The final runs, inertia-scaled, of all six arms. |
+| `20261111-034038-compare_raw` | Likewise, raw torque. |
+
+Three round-1 tuning runs, `tune_staged_raw` and both `tune_feedback_short`, record
+uncommitted changes. They were untracked report scripts under `reports/`, which
+`git status` counts and the runs do not read; the configurations and the code were
+committed. Every later run records none.
