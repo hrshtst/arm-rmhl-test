@@ -83,6 +83,9 @@ controller ran away, so they test that setting more than the speed.
 | --- | --- | --- |
 | `tune_staged_inertia.toml`, `tune_staged_raw.toml` | `learn_combined.py` | the staged schedule's feedback, over a grid of learning rates and amplitudes, seed 0, 1,000 trials |
 | `tune_feedback_short_inertia.toml`, `tune_feedback_short_raw.toml` | `learn_feedback.py` | the feedback alone for speed, over a grid of learning rates and amplitudes, seed 0, 300 trials |
+| `tune_staged_<scale>_round2.toml` | `learn_combined.py` | round 2: larger amplitudes, around round 1's best learning rate, whose amplitude lay on the grid's edge |
+| `tune_feedback_short_inertia_round2.toml` | `learn_feedback.py` | round 2: a finer grid around round 1's best, which is report 001's setting |
+| `tune_feedback_short_raw_round2.toml` | `learn_feedback.py` | round 2: larger amplitudes, around round 1's best learning rate, whose amplitude lay on the grid's edge |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/learning_speed/tune_staged_<scale>.toml --workers 24

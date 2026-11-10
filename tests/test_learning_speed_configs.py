@@ -45,9 +45,13 @@ def test_every_configuration_is_on_the_arm_the_reach_and_the_weak_pd(path: Path)
     expand(config)  # every swept setting is in the configuration
 
 
-@pytest.mark.parametrize("scale", SCALES)
-def test_tuning_the_staged_schedule_changes_only_the_schedule_and_the_feedbacks_setting(scale: str):
-    config = load(EXPERIMENT / f"tune_staged_{scale}.toml")
+@pytest.mark.parametrize(
+    ("scale", "path"),
+    [(scale, path) for scale in SCALES for path in sorted(EXPERIMENT.glob(f"tune_staged_{scale}*.toml"))],
+    ids=lambda value: getattr(value, "stem", value),
+)
+def test_tuning_the_staged_schedule_changes_only_the_schedule_and_the_feedbacks_setting(scale: str, path: Path):
+    config = load(path)
     base = load(EXPERIMENTS / "feedback_without_constant" / f"final_concurrent_{scale}.toml")
 
     assert config["schedule"] == {"kind": "staged", "handover": 100}
@@ -57,9 +61,13 @@ def test_tuning_the_staged_schedule_changes_only_the_schedule_and_the_feedbacks_
     assert without_tuned(config) == without_tuned(base)
 
 
-@pytest.mark.parametrize("scale", SCALES)
-def test_tuning_the_feedback_for_speed_changes_only_its_setting_and_the_budget(scale: str):
-    config = load(EXPERIMENT / f"tune_feedback_short_{scale}.toml")
+@pytest.mark.parametrize(
+    ("scale", "path"),
+    [(scale, path) for scale in SCALES for path in sorted(EXPERIMENT.glob(f"tune_feedback_short_{scale}*.toml"))],
+    ids=lambda value: getattr(value, "stem", value),
+)
+def test_tuning_the_feedback_for_speed_changes_only_its_setting_and_the_budget(scale: str, path: Path):
+    config = load(path)
     base = load(EXPERIMENTS / "feedback_from_scratch" / f"long_decorrelated_{scale}.toml")
 
     assert config["training"] == {"trials": 300, "dead_zone": 0.0, "evaluate_every": 20, "evaluate_all_until": 100}
