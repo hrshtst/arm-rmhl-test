@@ -135,6 +135,7 @@ seed by seed. The raw-torque runs are reported beside them.
 | `tune_combined_inertia.toml`, `tune_combined_raw.toml` | `learn_combined.py` | arm A's feedback, over a grid of learning rates and amplitudes, seed 0, 1,000 trials |
 | `tune_combined_inertia_round2.toml` | `learn_combined.py` | round 2: smaller learning rates, around round 1's best amplitude, as its learning rate lay on the grid's edge |
 | `tune_combined_inertia_round3.toml` | `learn_combined.py` | round 3: learning rates between round 2's largest, where its best lay, and round 1's next, with amplitudes around round 2's best and below |
+| `tune_combined_inertia_round4.toml` | `learn_combined.py` | round 4: larger learning rates, as round 3's best lay on its grid's edge, at round 3's best amplitude and below |
 | `tune_combined_raw_round2.toml` | `learn_combined.py` | round 2: smaller amplitudes, around round 1's best learning rate and above it, as its amplitude lay on the grid's edge |
 | `decorrelation_inertia.toml` | `record_decorrelation.py` | the mechanism check: report 005's combined controller and report 006's feedback alone without the constant, seeds 1 to 5, trained again for 1,000 trials, recording `C` |
 
