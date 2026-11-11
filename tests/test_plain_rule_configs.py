@@ -3,6 +3,7 @@
 
 """The plain_rule configurations follow its protocol (see its README.md)."""
 
+import itertools
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,7 @@ SHARED = ("initial", "skeleton", "simulator", "reach", "command")
 SCALES = ("raw", "inertia")
 PLAIN = False  # the rule's decorrelation: none, the plain node-perturbation rule
 DECORRELATED = 1.0  # burms2015's
+TUNED = {"raw": (32.0, 0.1), "inertia": (0.8, 5.7)}  # the closest at 1,000 trials on seed 0, over all rounds
 
 
 def load(path: Path) -> dict[str, Any]:
@@ -63,6 +65,47 @@ def test_tuning_the_combined_controller_changes_only_the_rule_and_the_feedbacks_
     assert set(config["sweep"]) == {"rule.learning_rate", "rule.exploration.amplitude"}
     config["rule"]["decorrelation"] = DECORRELATED
     assert without_tuned(config) == without_tuned(base)
+
+
+def tuned_settings(scale: str) -> set[tuple[float, float]]:
+    """Every learning rate and amplitude that a round of tuning the scale ran."""
+    settings: set[tuple[float, float]] = set()
+    for path in EXPERIMENT.glob(f"tune_combined_{scale}*.toml"):
+        sweep = load(path)["sweep"]
+        settings |= set(itertools.product(sweep["rule.learning_rate"], sweep["rule.exploration.amplitude"]))
+    return settings
+
+
+@pytest.mark.parametrize("scale", SCALES)
+def test_arm_a_is_the_tuned_combined_controller_on_the_final_seeds(scale: str):
+    config = load(EXPERIMENT / f"final_combined_{scale}.toml")
+    tuning = load(EXPERIMENT / f"tune_combined_{scale}.toml")
+    setting = (config["rule"]["learning_rate"], config["rule"]["exploration"]["amplitude"])
+
+    assert setting == TUNED[scale]
+    assert setting in tuned_settings(scale)
+    assert final_seeds(config) == [1, 2, 3, 4, 5]
+    assert config["training"] == tuning["training"] | {"trials": 10000}
+    assert without_tuned(config) == without_tuned(tuning)
+
+
+@pytest.mark.parametrize("scale", SCALES)
+def test_arm_b_is_arm_a_without_its_feedforward(scale: str):
+    alone = load(EXPERIMENT / f"final_feedback_no_constant_{scale}.toml")
+    combined = load(EXPERIMENT / f"final_combined_{scale}.toml")
+
+    del combined["readout"], combined["schedule"]
+    assert alone == combined
+
+
+@pytest.mark.parametrize("scale", SCALES)
+def test_arm_c_continues_report_001s_final_runs_of_the_plain_rule(scale: str):
+    config = load(EXPERIMENT / f"long_plain_{scale}.toml")
+    base = load(EXPERIMENTS / "feedback_from_scratch" / f"final_plain_{scale}.toml")
+
+    assert base["training"]["trials"] == 3000
+    assert config.pop("training") == base.pop("training") | {"trials": 10000, "evaluate_all_until": 100}
+    assert config == base  # the constant included, at report 001's tuned setting and seeds
 
 
 def test_the_mechanism_check_records_the_decorrelated_arms_of_reports_005_and_006_inertia_scaled():

@@ -138,9 +138,15 @@ seed by seed. The raw-torque runs are reported beside them.
 | `tune_combined_inertia_round4.toml` | `learn_combined.py` | round 4: larger learning rates, as round 3's best lay on its grid's edge, at round 3's best amplitude and below |
 | `tune_combined_inertia_round5.toml` | `learn_combined.py` | round 5: the next amplitude, 8 rad/s^2, at round 4's learning rates around its best, as that lay on its grid's edge of amplitudes |
 | `tune_combined_raw_round2.toml` | `learn_combined.py` | round 2: smaller amplitudes, around round 1's best learning rate and above it, as its amplitude lay on the grid's edge |
+| `final_combined_inertia.toml`, `final_combined_raw.toml` | `learn_combined.py` | arm A: the closest setting over the rounds, seeds 1 to 5, 10,000 trials |
+| `final_feedback_no_constant_inertia.toml`, `final_feedback_no_constant_raw.toml` | `learn_feedback.py` | arm B: arm A without its feedforward, at arm A's setting |
+| `long_plain_inertia.toml`, `long_plain_raw.toml` | `learn_feedback.py` | arm C: report 001's final runs of the plain rule, continued to 10,000 trials |
 | `decorrelation_inertia.toml` | `record_decorrelation.py` | the mechanism check: report 005's combined controller and report 006's feedback alone without the constant, seeds 1 to 5, trained again for 1,000 trials, recording `C` |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/plain_rule/tune_combined_<scale>.toml --workers 16
+uv run python experiments/learn_combined.py experiments/plain_rule/final_combined_<scale>.toml --workers 5
+uv run python experiments/learn_feedback.py experiments/plain_rule/final_feedback_no_constant_<scale>.toml --workers 5
+uv run python experiments/learn_feedback.py experiments/plain_rule/long_plain_<scale>.toml --workers 5
 uv run python experiments/record_decorrelation.py experiments/plain_rule/decorrelation_inertia.toml --workers 10
 ```
