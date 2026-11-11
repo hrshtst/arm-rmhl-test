@@ -203,8 +203,9 @@ schedule and at 300 for the feedback alone.
 ### 3.2 The final runs
 
 Every arm's noise-free tracking error over the reaches, drawn like report 003's
-final-runs figure: the combined arms' seeds thin, the medians thick (a run-away
-counting as it is), and the PDs dashed. The reaches are on a logarithmic axis.
+final-runs figure: each seed thin, the medians thick (a run-away counting as it
+is), and the PDs dashed. The feedforward alone is one run: it has no exploration
+noise. The reaches are on a logarithmic axis.
 
 ![The final runs of all six arms, inertia-scaled and with raw torque, against the PDs](figures/final.png)
 
@@ -251,7 +252,12 @@ Report 001's runs were not evaluated at 10 and 30 reaches.
   the weak PD's 170 mm. Seed 4 ended at 473 mm.
 - **The feedback alone held on every seed but one.** All 15 inertia-scaled
   trainings improved, and 14 of 15 with raw torque. The feedback tuned for 300
-  reaches lost seed 1 with raw torque by reach 100.
+  reaches lost seed 1 with raw torque at once: 367 mm after 2 reaches, then 569 to
+  690 mm from the third to the end, mostly hidden in the figure under the combined
+  controller's run-aways. Two more of its seeds left the weak PD early and came
+  back. Seed 3 rose to 353 mm and was below 170 mm again after 10 reaches; seed 4
+  rose to 604 mm and stayed above 170 mm until reach 120. They ended at 4.7 and
+  25.1 mm. Together, the three lift its median to 255 to 353 mm from reach 3 to 9.
 
 ### 3.3 The reaches to each level
 

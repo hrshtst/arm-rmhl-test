@@ -7,8 +7,9 @@
 
 It writes, under ``figures/``:
 
-- ``final.png``: the noise-free tracking error of every arm over the reaches, a panel
-  per feedback scale, against the PDs;
+- ``final.png``: the noise-free tracking error of every arm over the reaches, each
+  seed thin and the median over the seeds thick, a panel per feedback scale, against
+  the PDs;
 - ``levels.png``: the reach from which each seed stays closer than each PD, per arm.
 """
 
@@ -94,7 +95,7 @@ def draw_final(runs, pds) -> None:
         for (label, run), color in zip(runs[scale].items(), SERIES, strict=True):
             at, evaluations = load_course(run)
             errors = millimetres(evaluations)
-            if label.startswith("combined") and len(errors) > 1:
+            if len(errors) > 1:
                 for row in errors:
                     ax.plot(at, row, color=color, lw=0.6, alpha=0.35, zorder=2)
             ax.plot(at, np.median(errors, axis=0), color=color, lw=2.0, label=label, zorder=3)
