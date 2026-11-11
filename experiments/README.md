@@ -13,7 +13,7 @@ experiments and live directly in this directory.
 | [`directional_forgetting`](directional_forgetting/README.md) | RQ1: `combined_learning`'s feedforward forgetting directionally, alone and with the reward-modulated feedback on the concurrent schedule, against its wind-up forgetting exponentially | `learn_combined.py`, `compare_learning.py` | [004](../reports/004-directional-forgetting/README.md) |
 | [`feedback_without_constant`](feedback_without_constant/README.md) | RQ1: `directional_forgetting`'s combined controller without the feedback's constant torque, against its drift of the constant between the two parts | `learn_combined.py`, `compare_learning.py` | [005](../reports/005-feedback-without-constant/README.md) |
 | [`learning_speed`](learning_speed/README.md) | RQ1: how many reaches the combined controller needs to track as closely as a stiffer PD, against each learner alone, the feedback tuned both for 1,000 reaches and for 300 | `learn_combined.py`, `learn_feedback.py`, `compare_learning.py` | [006](../reports/006-learning-speed/README.md) |
-| [`plain_rule`](plain_rule/README.md) | RQ1: `learning_speed`'s question with the plain reward-modulated rule in place of the decorrelated one, and whether the decorrelation still acts once the feedforward has cut the error | `learn_combined.py`, `learn_feedback.py`, `compare_learning.py` | 007 |
+| [`plain_rule`](plain_rule/README.md) | RQ1: `learning_speed`'s question with the plain reward-modulated rule in place of the decorrelated one, and whether the decorrelation still acts once the feedforward has cut the error | `learn_combined.py`, `learn_feedback.py`, `record_decorrelation.py`, `compare_learning.py` | 007 |
 
 The runners:
 
@@ -26,6 +26,10 @@ The runners:
 - `learn_combined.py` learns both together, the feedforward by feedback-error
   learning and the feedback from one reward per reach, likewise; leaving out
   either learner's table gives the other alone;
+- `record_decorrelation.py` trains runs of `learn_feedback.py` or
+  `learn_combined.py` with the decorrelated rule again, recording the matrix of
+  each learning reach that the rule's update divides by, and checks that the
+  trainings reproduce the stored ones;
 - `compare_learning.py` draws the noise-free learning of several runs of
   `learn_feedback.py`, `learn_feedforward.py` or `learn_combined.py`, normally one
   per rule, each over its seeds, against joint PDs of a run of `pd_grid.py`.

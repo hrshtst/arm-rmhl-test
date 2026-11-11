@@ -1,0 +1,14 @@
+# The mechanism check: report 005's combined controller and report 006's feedback alone
+# without the constant, both decorrelated and inertia-scaled, trained again on their seeds,
+# 1 to 5, for their first 1,000 reaches, recording each learning reach's C.
+
+[[arm]]
+run = "results/feedback_without_constant/20261108-074908-final_concurrent_inertia"
+label = "combined, concurrent (report 005)"
+
+[[arm]]
+run = "results/learning_speed/20261111-020819-final_feedback_no_constant_inertia"
+label = "feedback alone, without the constant (report 006)"
+
+[training]
+trials = 1000  # the first of the 10,000 reaches stored

@@ -105,8 +105,10 @@ above or below:
    for their first 1,000 reaches on seeds 1 to 5. Every learning reach must
    reproduce the stored error exactly. Each records `C` of each learning reach, and
    its eigenvalues give, reach by reach, how many of its four directions lie above
-   the ridge term of 1. A script of report 007 records `C` by wrapping the
-   training's functions from outside, so neither rclib nor the package changes.
+   the ridge term of 1. The runner `record_decorrelation.py` records `C` by
+   wrapping the training's functions from outside, so neither rclib nor the
+   package changes. It also checks that each change of the weights is
+   `inv(C + I) E` times one number, so that the `C` it records is the rule's.
 4. **The comparison**, raw torque and inertia-scaled, as report 006's:
    1. the noise-free tracking error of every arm over the reaches, each seed and
       the median over the seeds, against the weak PD alone and PDs of
@@ -134,7 +136,9 @@ seed by seed. The raw-torque runs are reported beside them.
 | `tune_combined_inertia_round2.toml` | `learn_combined.py` | round 2: smaller learning rates, around round 1's best amplitude, as its learning rate lay on the grid's edge |
 | `tune_combined_inertia_round3.toml` | `learn_combined.py` | round 3: learning rates between round 2's largest, where its best lay, and round 1's next, with amplitudes around round 2's best and below |
 | `tune_combined_raw_round2.toml` | `learn_combined.py` | round 2: smaller amplitudes, around round 1's best learning rate and above it, as its amplitude lay on the grid's edge |
+| `decorrelation_inertia.toml` | `record_decorrelation.py` | the mechanism check: report 005's combined controller and report 006's feedback alone without the constant, seeds 1 to 5, trained again for 1,000 trials, recording `C` |
 
 ```bash
 uv run python experiments/learn_combined.py experiments/plain_rule/tune_combined_<scale>.toml --workers 16
+uv run python experiments/record_decorrelation.py experiments/plain_rule/decorrelation_inertia.toml --workers 10
 ```

@@ -15,7 +15,8 @@ from arm_rmhl_test.sweeps import expand
 
 EXPERIMENTS = REPO_ROOT / "experiments"
 EXPERIMENT = EXPERIMENTS / "plain_rule"
-CONFIGS = sorted(path for path in EXPERIMENT.glob("*.toml") if not path.stem.startswith("compare_"))  # runs of the arms
+ANALYSES = ("compare_", "decorrelation_")  # configurations of analyses of runs, not of the arms' runs
+CONFIGS = sorted(path for path in EXPERIMENT.glob("*.toml") if not path.stem.startswith(ANALYSES))
 SHARED = ("initial", "skeleton", "simulator", "reach", "command")
 SCALES = ("raw", "inertia")
 PLAIN = False  # the rule's decorrelation: none, the plain node-perturbation rule
@@ -62,3 +63,24 @@ def test_tuning_the_combined_controller_changes_only_the_rule_and_the_feedbacks_
     assert set(config["sweep"]) == {"rule.learning_rate", "rule.exploration.amplitude"}
     config["rule"]["decorrelation"] = DECORRELATED
     assert without_tuned(config) == without_tuned(base)
+
+
+def test_the_mechanism_check_records_the_decorrelated_arms_of_reports_005_and_006_inertia_scaled():
+    config = load(EXPERIMENT / "decorrelation_inertia.toml")
+    reports = REPO_ROOT / "reports"
+    copies = [
+        reports / "005-feedback-without-constant" / "results" / "20261108-074908-final_concurrent_inertia",
+        reports / "006-learning-speed" / "results" / "20261111-020819-final_feedback_no_constant_inertia",
+    ]
+
+    assert [Path(arm["run"]).name for arm in config["arm"]] == [copy.name for copy in copies]
+    for copy in copies:  # the reports' copies of the runs, as the storage root holds them
+        stored = load(copy / "config.toml")
+        assert stored["feedback"] == {"scale": "inertia", "constant": False}
+        assert stored["rule"]["decorrelation"] == DECORRELATED
+        assert final_seeds(stored) == [1, 2, 3, 4, 5]
+    assert config["training"] == {"trials": 1000}
+
+
+def final_seeds(config: dict[str, Any]) -> list[int]:
+    return config["sweep"]["rule.exploration.seed"]
