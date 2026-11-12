@@ -152,3 +152,32 @@ uv run python experiments/learn_feedback.py experiments/plain_rule/long_plain_<s
 uv run python experiments/compare_learning.py experiments/plain_rule/compare_<scale>.toml
 uv run python experiments/record_decorrelation.py experiments/plain_rule/decorrelation_inertia.toml --workers 10
 ```
+
+## Runs
+
+Under `results/plain_rule/` in the storage root. Tuning errors are the noise-free
+tracking errors at the last trial on seed 0; final errors are at the last trial, on
+seeds 1 to 5. A learning rate is written with its amplitude, as "0.8 with
+5.7 rad/s^2". A run-away ends near 700 mm, beyond the weak PD alone's 170 mm; it is
+dated by its first evaluation above 340 mm, twice that.
+
+| Run | Result |
+| --- | --- |
+| `20261111-233733-tune_combined_inertia` | 6 of 24 improve. The closest is 0.15 with 8 rad/s^2, 2.88 mm, on the grid's smallest learning rate; then 0.5 with 4 rad/s^2, 3.01 mm. The other 18 run away, past 340 mm by trial 4. |
+| `20261111-233733-tune_combined_raw` | 7 of 28 improve. The closest is 8 with 0.2 N m, 2.74 mm, on the grid's smallest amplitude; then 2.5 with 0.4 N m, 3.24 mm. Of the 21 that run away, 18 pass 340 mm by trial 3. The other three, 0.25 with 0.8 N m, 8 with 0.4 N m and 25 with 0.2 N m, first reach 3.16, 2.94 and 2.33 mm, at trials 540, 320 and 540, and pass 340 mm at trials 920, 400 and 580. |
+| `20261112-000217-tune_combined_inertia_round2` | 19 of 20 improve, and at every amplitude the error falls as the learning rate rises. The closest is 0.15 with 11 rad/s^2, 2.81 mm, on the grid's largest learning rate; 0.15 with 16 rad/s^2 runs away. |
+| `20261112-000217-tune_combined_raw_round2` | 13 of 20 improve. The closest is 32 with 0.1 N m, 2.40 mm, inside the grid; then 16 with 0.14 N m, 2.51 mm. Its neighbours 64 with 0.1 N m and 32 with 0.14 N m run away, past 340 mm by trials 3 and 10. 16 with 0.2 N m reaches 2.39 mm at trial 860, passes 340 mm at trial 920, and ends non-finite. |
+| `20261112-001938-tune_combined_inertia_round3` | 7 of 12 improve. The closest is 0.4 with 5.7 rad/s^2, 2.69 mm, on the grid's largest learning rate. Every setting at 11 rad/s^2, and at 8 rad/s^2 from 0.3 up, runs away, past 340 mm by trial 5. |
+| `20261112-002401-decorrelation_inertia` | The mechanism check. All 10 trainings, 5 of each arm, reproduce their stored errors bit for bit for 1,000 trials, and every change of the weights is `inv(C + I) E` times one number, to a relative residual of 5e-11 at most. |
+| `20261112-002919-tune_combined_inertia_round4` | 4 of 8 improve. The closest is 0.8 with 5.7 rad/s^2, 2.37 mm, on the grid's largest amplitude; 0.5 and 0.6 with 5.7 rad/s^2 run away, and so does 1.1 with both amplitudes, past 340 mm by trial 5. |
+| `20261112-075033-tune_combined_inertia_round5` | 0 of 3 improve: 0.6, 0.8 and 1.1 with 8 rad/s^2 run away, past 340 mm by trial 4. 0.8 with 5.7 rad/s^2, 2.37 mm, stays the closest, now inside the grids. |
+| `20261112-075657-final_combined_inertia` | 4 of 5 improve, to 2.00 to 2.57 mm at 1,000 trials and 1.23 to 1.63 mm at 10,000. Seed 4 runs away at trial 2. |
+| `20261112-075657-final_combined_raw` | 1 of 5 improves: seed 5, to 2.63 mm at 1,000 trials and 1.79 mm at 10,000. The other four run away at trial 2 or 3. |
+| `20261112-075657-final_feedback_no_constant_inertia` | 0 of 5 improve. Seeds 1 to 4 run away between trials 4 and 19. Seed 5 reaches 14.0 mm at trial 3,400, then runs away by trial 3,420. |
+| `20261112-075657-final_feedback_no_constant_raw` | 0 of 5 improve: every seed runs away between trials 2 and 4. |
+| `20261112-075657-long_plain_inertia` | Its first 3,000 trials reproduce report 001's runs bit for bit. 2 of 5 improve, to 18.3 and 16.9 mm at 10,000 trials. Seeds 3, 4 and 5 run away after reaching 51, 25 and 26 mm, by trials 680, 1,820 and 2,220, as in report 001. |
+| `20261112-075657-long_plain_raw` | Its first 3,000 trials reproduce report 001's runs bit for bit. 2 of 5 improve, seeds 3 and 5, to 11.6 and 11.8 mm. Seed 1, at 24.2 mm at trial 3,000 in report 001, reaches 12.1 mm at trial 7,040, then runs away by trial 7,180. Seeds 2 and 4 run away within 4 trials, as in report 001. |
+| `20261112-095433-compare_inertia` | The final runs, inertia-scaled, of all seven arms. |
+| `20261112-095434-compare_raw` | Likewise, raw torque. |
+
+Every run records no uncommitted changes.
