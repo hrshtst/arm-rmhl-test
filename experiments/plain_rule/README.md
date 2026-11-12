@@ -30,6 +30,12 @@ so, the plain rule could serve the combined controller where it failed alone. Th
 eigenvalues come from noise-free reaches under fixed PDs, not from the learning
 reaches.
 
+**Note, 2026-11-12.** Report [007](../../reports/007-plain-rule/README.md)'s
+mechanism check found this half right. On the learning reaches of the combined
+controller, three of the four directions of `C` fall below the ridge term within
+5 to 36 reaches, but the largest stays near 40, so along it the decorrelated
+update is far from the plain one at the same learning rate.
+
 The questions:
 
 1. **Q1.** Does the combined controller learn faster than the feedback alone with

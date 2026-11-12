@@ -34,7 +34,10 @@ with [skelarm](https://github.com/hrshtst/skelarm).
 > reaches: inertia-scaled, that controller passes the 20-, 28-, and 40-rad/s PDs
 > after 11, 25, and 99 reaches, against 920, 2,820, and more than 10,000 for the
 > fastest feedback alone, even tuned for speed; most of the early speed is the
-> feedforward's.
+> feedforward's. Report [007](reports/007-plain-rule/README.md) repeats it with
+> the plain reward-modulated rule: the combined controller still passes those PDs
+> after 24, 72, and 1,140 reaches, where the plain feedback alone passes none in
+> 10,000, but it is slower than with the decorrelated rule and loses 1 of 5 seeds.
 
 ## Motivation
 
@@ -230,6 +233,7 @@ Each report has five parts:
 | [004 Directional forgetting](reports/004-directional-forgetting/README.md) | RQ1: forgetting only along each period's input, does the feedforward stop winding up, and does the combination then track more closely? | It stops winding up at every setting tried. Inertia-scaled, the combination tracks to 0.8 mm on 4 of 5 seeds, against 1.3 mm without forgetting; raw torque holds on 1 of 5, as its retuned feedback runs away on new seeds. The feedback's and the feedforward's constant torques drift apart. |
 | [005 Feedback without its constant](reports/005-feedback-without-constant/README.md) | RQ1: does the constant input that the feedback shares with the feedforward cause report 004's drift? | Yes: without the feedback's constant, the inertia-scaled feedforward holds the constant torque and works without the feedback again, 10.0 mm against 159 mm, and all 5 seeds track to 0.69 to 0.77 mm, below the closest PD, with little scatter. Raw torque still holds on 1 of 5, its early run-aways happening either way. |
 | [006 Learning speed](reports/006-learning-speed/README.md) | RQ1: does the feedforward make the reward-modulated feedback track as closely as a stiffer PD in fewer reaches than the feedback needs alone? | Yes, inertia-scaled, at report 005's settings: 11, 25, and 99 reaches to the 20-, 28-, and 40-rad/s PDs, against 920, 2,820, and more than 10,000 for the fastest feedback alone, even tuned for speed, with every seed apart. The feedforward alone passes the first two in 20 and 40. The staged schedule runs away on 2 of 5 seeds, and raw torque is not steady. |
+| [007 Plain rule](reports/007-plain-rule/README.md) | RQ1: does the combined controller's speed depend on the decorrelated rule? | Partly. Inertia-scaled, with the plain rule, it passes the 20-, 28-, and 40-rad/s PDs after 24, 72, and 1,140 reaches; the plain feedback alone passes none in 10,000, but 1 of 5 combined seeds runs away at reach 2. The decorrelated rule is 2 to 12 times faster and ends closer, 0.7 against 1.2 to 1.6 mm. The largest eigenvalue of the matrix it divides by stays near 40, limiting the plain rule's learning rate to 0.8. |
 
 ## Dependencies
 

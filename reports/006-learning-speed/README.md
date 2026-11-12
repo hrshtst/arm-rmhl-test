@@ -319,6 +319,13 @@ Raw torque:
 
 The staged schedule's ranges overlap because 2 of its 5 seeds never pass.
 
+**Note, 2026-11-12: with the plain rule.** Every feedback here learned by the
+decorrelated rule. Report [007](../007-plain-rule/README.md) repeats the
+comparison with the plain rule. Inertia-scaled, the combined controller passes the
+three levels after 24, 72, and 1,140 reaches, and the plain feedback alone passes
+none in 10,000; 1 of 5 combined seeds runs away at reach 2. With the decorrelated
+rule, the combined controller passed them 2, 3, and 12 times sooner.
+
 ### 3.5 While learning, and the exploration against the reach's torque
 
 The evaluations above are noise-free reaches, which change nothing. The reaches
