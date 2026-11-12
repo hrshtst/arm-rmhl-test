@@ -134,6 +134,31 @@ decorrelated combined controllers differ at a level only where their seeds' rang
 do not overlap, and likewise for their final errors; their run-aways are compared
 seed by seed. The raw-torque runs are reported beside them.
 
+## Addendum, 2026-11-12: the staged schedule
+
+Report 006 ran the staged schedule with the decorrelated rule only, and arm A runs
+the plain rule on the concurrent schedule only. To compare the two rules on both
+schedules, one arm is added, inertia-scaled only:
+
+- **D. Combined, staged, plain**: report 006's staged controller with the plain
+  rule, or equally arm A on the staged schedule. The feedforward learns the first 100
+  reaches alone and is then frozen, and the feedback learns from the rest. The
+  feedback's learning rate and amplitude are tuned as arm A's were, since neither
+  arm A's setting nor the decorrelated staged one need suit it.
+
+Its first 100 reaches are the feedforward alone's, bit for bit, as in report 006.
+Whether it passes each level, and when, depends only on what the feedback does from
+reach 100 on.
+
+1. **Tuning**, on seed 0, for its error at 1,000 reaches, by the protocol above.
+   Round 1 takes arm A's round-1 learning rates, 0.15 to 50, with 4, 8, 16 and
+   32 rad/s^2: 32 rad/s^2 is the amplitude that the decorrelated rule was tuned to
+   on the staged schedule.
+2. **The final runs**, on seeds 1 to 5, for 10,000 reaches, evaluated as the other
+   arms are.
+
+Raw torque is not run.
+
 ## Configurations
 
 | Configuration | Runner | What it runs |
@@ -144,6 +169,7 @@ seed by seed. The raw-torque runs are reported beside them.
 | `tune_combined_inertia_round4.toml` | `learn_combined.py` | round 4: larger learning rates, as round 3's best lay on its grid's edge, at round 3's best amplitude and below |
 | `tune_combined_inertia_round5.toml` | `learn_combined.py` | round 5: the next amplitude, 8 rad/s^2, at round 4's learning rates around its best, as that lay on its grid's edge of amplitudes |
 | `tune_combined_raw_round2.toml` | `learn_combined.py` | round 2: smaller amplitudes, around round 1's best learning rate and above it, as its amplitude lay on the grid's edge |
+| `tune_staged_inertia.toml` | `learn_combined.py` | arm D's feedback, the staged schedule, inertia-scaled: arm A's round-1 learning rates with 4 to 32 rad/s^2, seed 0, 1,000 trials |
 | `final_combined_inertia.toml`, `final_combined_raw.toml` | `learn_combined.py` | arm A: the closest setting over the rounds, seeds 1 to 5, 10,000 trials |
 | `final_feedback_no_constant_inertia.toml`, `final_feedback_no_constant_raw.toml` | `learn_feedback.py` | arm B: arm A without its feedforward, at arm A's setting |
 | `long_plain_inertia.toml`, `long_plain_raw.toml` | `learn_feedback.py` | arm C: report 001's final runs of the plain rule, continued to 10,000 trials |
@@ -152,6 +178,7 @@ seed by seed. The raw-torque runs are reported beside them.
 
 ```bash
 uv run python experiments/learn_combined.py experiments/plain_rule/tune_combined_<scale>.toml --workers 16
+uv run python experiments/learn_combined.py experiments/plain_rule/tune_staged_inertia.toml --workers 24
 uv run python experiments/learn_combined.py experiments/plain_rule/final_combined_<scale>.toml --workers 5
 uv run python experiments/learn_feedback.py experiments/plain_rule/final_feedback_no_constant_<scale>.toml --workers 5
 uv run python experiments/learn_feedback.py experiments/plain_rule/long_plain_<scale>.toml --workers 5

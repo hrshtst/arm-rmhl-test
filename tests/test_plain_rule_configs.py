@@ -67,6 +67,21 @@ def test_tuning_the_combined_controller_changes_only_the_rule_and_the_feedbacks_
     assert without_tuned(config) == without_tuned(base)
 
 
+@pytest.mark.parametrize("path", sorted(EXPERIMENT.glob("tune_staged_inertia*.toml")), ids=lambda path: path.stem)
+def test_tuning_the_staged_schedule_is_report_006s_staged_controller_with_the_plain_rule(path: Path):
+    config = load(path)
+    staged = load(EXPERIMENTS / "learning_speed" / "tune_staged_inertia.toml")
+    concurrent = load(EXPERIMENT / "tune_combined_inertia.toml")
+
+    assert config["schedule"] == {"kind": "staged", "handover": 100}
+    assert config["training"] == concurrent["training"]
+    assert config["rule"]["exploration"]["seed"] == 0
+    assert set(config["sweep"]) == {"rule.learning_rate", "rule.exploration.amplitude"}
+    assert without_tuned(load(path)) == without_tuned(concurrent) | {"schedule": config["schedule"]}
+    config["rule"]["decorrelation"] = DECORRELATED
+    assert without_tuned(config) == without_tuned(staged)
+
+
 def tuned_settings(scale: str) -> set[tuple[float, float]]:
     """Every learning rate and amplitude that a round of tuning the scale ran."""
     settings: set[tuple[float, float]] = set()
