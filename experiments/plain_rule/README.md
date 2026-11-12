@@ -171,6 +171,7 @@ Raw torque is not run.
 | `tune_combined_raw_round2.toml` | `learn_combined.py` | round 2: smaller amplitudes, around round 1's best learning rate and above it, as its amplitude lay on the grid's edge |
 | `tune_staged_inertia.toml` | `learn_combined.py` | arm D's feedback, the staged schedule, inertia-scaled: arm A's round-1 learning rates with 4 to 32 rad/s^2, seed 0, 1,000 trials |
 | `tune_staged_inertia_round2.toml` | `learn_combined.py` | round 2: smaller amplitudes, 2 and 2.8 rad/s^2, as round 1's best lay on its grid's smallest, and 5.7 rad/s^2, at learning rates around round 1's best |
+| `tune_staged_inertia_round3.toml` | `learn_combined.py` | round 3: smaller learning rates and a larger amplitude, as round 2's best lay in its grid's corner |
 | `final_combined_inertia.toml`, `final_combined_raw.toml` | `learn_combined.py` | arm A: the closest setting over the rounds, seeds 1 to 5, 10,000 trials |
 | `final_feedback_no_constant_inertia.toml`, `final_feedback_no_constant_raw.toml` | `learn_feedback.py` | arm B: arm A without its feedforward, at arm A's setting |
 | `long_plain_inertia.toml`, `long_plain_raw.toml` | `learn_feedback.py` | arm C: report 001's final runs of the plain rule, continued to 10,000 trials |
