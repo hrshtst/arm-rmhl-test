@@ -216,5 +216,9 @@ dated by its first evaluation above 340 mm, twice that.
 | `20261112-075657-long_plain_raw` | Its first 3,000 trials reproduce report 001's runs bit for bit. 2 of 5 improve, seeds 3 and 5, to 11.6 and 11.8 mm. Seed 1, at 24.2 mm at trial 3,000 in report 001, reaches 12.1 mm at trial 7,040, then runs away by trial 7,180. Seeds 2 and 4 run away within 4 trials, as in report 001. |
 | `20261112-095433-compare_inertia` | The final runs, inertia-scaled, of all seven arms. |
 | `20261112-095434-compare_raw` | Likewise, raw torque. |
+| `20261112-191109-tune_staged_inertia` | 6 of 24 improve. The closest is 5 with 4 rad/s^2, 1.73 mm, on the grid's smallest amplitude; then 0.5 with 8 rad/s^2, 1.82 mm. In every setting, the first 100 trials are the feedforward alone's (report 004), bit for bit. The other 18 run away: 14 are past 340 mm at trial 120, the first evaluation after the feedback joins, and four by trials 160 to 780. |
+| `20261112-192258-tune_staged_inertia_round2` | 15 of 20 improve. The closest is 2.5 with 5.7 rad/s^2, 1.617 mm, in the grid's corner; then 7 with 4 rad/s^2, 1.624 mm. 5 with 4 rad/s^2 repeats round 1's run bit for bit. The five that run away, 3.5 to 10 with 5.7 rad/s^2 and 10 with 4 rad/s^2, pass 340 mm by trials 300 to 740. |
+| `20261112-193250-tune_staged_inertia_round3` | 6 of 9 improve. 2.5 with 5.7 rad/s^2, 1.62 mm, stays the closest, now inside the grids; then 1.8 with 5.7 rad/s^2, 1.72 mm. Every setting at 8 rad/s^2 runs away, past 340 mm by trials 300 to 780. 2.5 with 4 and with 5.7 rad/s^2 repeat round 2's runs bit for bit. |
+| `20261112-194034-final_staged_inertia` | 4 of 5 improve, to 1.60 to 1.70 mm at 1,000 trials and 1.20 to 1.22 mm at 10,000. Every seed's first 100 trials are the feedforward alone's, bit for bit. Seed 4 reaches 1.21 mm, then runs away late, past 340 mm by trial 8,280. |
 
 Every run records no uncommitted changes.
