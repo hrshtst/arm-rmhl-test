@@ -141,6 +141,7 @@ seed by seed. The raw-torque runs are reported beside them.
 | `final_combined_inertia.toml`, `final_combined_raw.toml` | `learn_combined.py` | arm A: the closest setting over the rounds, seeds 1 to 5, 10,000 trials |
 | `final_feedback_no_constant_inertia.toml`, `final_feedback_no_constant_raw.toml` | `learn_feedback.py` | arm B: arm A without its feedforward, at arm A's setting |
 | `long_plain_inertia.toml`, `long_plain_raw.toml` | `learn_feedback.py` | arm C: report 001's final runs of the plain rule, continued to 10,000 trials |
+| `compare_inertia.toml`, `compare_raw.toml` | `compare_learning.py` | the comparison: arms A, B and C against the decorrelated combined controller, the feedforward alone and the decorrelated feedback alone, with and without the constant |
 | `decorrelation_inertia.toml` | `record_decorrelation.py` | the mechanism check: report 005's combined controller and report 006's feedback alone without the constant, seeds 1 to 5, trained again for 1,000 trials, recording `C` |
 
 ```bash
@@ -148,5 +149,6 @@ uv run python experiments/learn_combined.py experiments/plain_rule/tune_combined
 uv run python experiments/learn_combined.py experiments/plain_rule/final_combined_<scale>.toml --workers 5
 uv run python experiments/learn_feedback.py experiments/plain_rule/final_feedback_no_constant_<scale>.toml --workers 5
 uv run python experiments/learn_feedback.py experiments/plain_rule/long_plain_<scale>.toml --workers 5
+uv run python experiments/compare_learning.py experiments/plain_rule/compare_<scale>.toml
 uv run python experiments/record_decorrelation.py experiments/plain_rule/decorrelation_inertia.toml --workers 10
 ```
