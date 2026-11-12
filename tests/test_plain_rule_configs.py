@@ -23,6 +23,7 @@ SCALES = ("raw", "inertia")
 PLAIN = False  # the rule's decorrelation: none, the plain node-perturbation rule
 DECORRELATED = 1.0  # burms2015's
 TUNED = {"raw": (32.0, 0.1), "inertia": (0.8, 5.7)}  # the closest at 1,000 trials on seed 0, over all rounds
+TUNED_STAGED = (2.5, 5.7)  # arm D's, likewise
 
 
 def load(path: Path) -> dict[str, Any]:
@@ -82,10 +83,10 @@ def test_tuning_the_staged_schedule_is_report_006s_staged_controller_with_the_pl
     assert without_tuned(config) == without_tuned(staged)
 
 
-def tuned_settings(scale: str) -> set[tuple[float, float]]:
-    """Every learning rate and amplitude that a round of tuning the scale ran."""
+def tuned_settings(scale: str, arm: str = "combined") -> set[tuple[float, float]]:
+    """Every learning rate and amplitude that a round of tuning the arm at the scale ran."""
     settings: set[tuple[float, float]] = set()
-    for path in EXPERIMENT.glob(f"tune_combined_{scale}*.toml"):
+    for path in EXPERIMENT.glob(f"tune_{arm}_{scale}*.toml"):
         sweep = load(path)["sweep"]
         settings |= set(itertools.product(sweep["rule.learning_rate"], sweep["rule.exploration.amplitude"]))
     return settings
@@ -102,6 +103,23 @@ def test_arm_a_is_the_tuned_combined_controller_on_the_final_seeds(scale: str):
     assert final_seeds(config) == [1, 2, 3, 4, 5]
     assert config["training"] == tuning["training"] | {"trials": 10000}
     assert without_tuned(config) == without_tuned(tuning)
+
+
+def test_arm_d_is_the_tuned_staged_controller_on_the_final_seeds():
+    config = load(EXPERIMENT / "final_staged_inertia.toml")
+    tuning = load(EXPERIMENT / "tune_staged_inertia.toml")
+    arm_a = load(EXPERIMENT / "final_combined_inertia.toml")
+    setting = (config["rule"]["learning_rate"], config["rule"]["exploration"]["amplitude"])
+
+    assert setting == TUNED_STAGED
+    assert setting in tuned_settings("inertia", "staged")
+    assert final_seeds(config) == [1, 2, 3, 4, 5]
+    assert config["training"] == tuning["training"] | {"trials": 10000}
+    assert without_tuned(load(EXPERIMENT / "final_staged_inertia.toml")) == without_tuned(tuning)
+    assert config.pop("schedule") == {"kind": "staged", "handover": 100}
+    config["rule"]["learning_rate"] = arm_a["rule"]["learning_rate"]
+    arm_a.pop("schedule")
+    assert config == arm_a  # arm A on the staged schedule, at its own tuned learning rate
 
 
 @pytest.mark.parametrize("scale", SCALES)
