@@ -25,7 +25,11 @@ it reuses, it prints, as Markdown:
 - Q3, the mechanism check: the eigenvalues of ``C`` over the reaches, the
   decorrelated rule's step along each of its directions over the plain rule's at
   arm A's learning rate, and the reach from which at most two, and at most one, of
-  its four directions stay above the ridge term.
+  its four directions stay above the ridge term;
+- the addendum, arm D, the staged schedule with the plain rule, inertia-scaled: its
+  tuning, and the four combined controllers' final runs, reaches to each level, and
+  seeds, rule against rule on each schedule and schedule against schedule with
+  each rule.
 """
 
 from __future__ import annotations
@@ -55,6 +59,8 @@ SCALES = {"inertia": "inertia-scaled", "raw": "raw torque"}
 PLAIN_COMBINED = "combined, plain"
 DECORRELATED_COMBINED = "combined, decorrelated (report 005)"
 PLAIN_FEEDBACK = ("feedback alone, plain, no constant", "feedback alone, plain (report 001)")
+STAGED_PLAIN = "combined, staged, plain"
+STAGED_DECORRELATED = "combined, staged, decorrelated (report 006)"
 EIGENVALUES_AT = (1, 2, 5, 10, 30, 100, 300, 1000)  # reaches
 
 
@@ -105,6 +111,37 @@ def main() -> None:
     print("\n## Q3, the mechanism check\n")
     plain_rate = load_config(latest(args.results, "-final_combined_inertia"))["rule"]["learning_rate"]
     print_mechanism(latest(args.results, "-decorrelation_inertia"), plain_rate)
+    if any(run.name.endswith("-final_staged_inertia") and complete(run) for run in args.results.iterdir()):
+        print("\n## Addendum: the staged schedule, inertia-scaled\n")
+        print_staged(args.results, pds)
+
+
+def staged_runs(results: Path) -> dict[str, Path]:
+    """The four combined controllers, inertia-scaled: the two rules on the two schedules."""
+    return {
+        PLAIN_COMBINED: latest(results, "-final_combined_inertia"),
+        DECORRELATED_COMBINED: latest(REPORT_005, "-final_concurrent_inertia"),
+        STAGED_PLAIN: latest(results, "-final_staged_inertia"),
+        STAGED_DECORRELATED: latest(REPORT_006, "-final_staged_inertia"),
+    }
+
+
+def print_staged(results: Path, pds: dict[tuple[float, float], float]) -> None:
+    print_tuning(results, "staged")
+    print_tuning_cost(results, "staged", {"inertia": SCALES["inertia"]})
+    runs = staged_runs(results)
+    print()
+    print_matched(runs)
+    print()
+    levels = print_levels(runs, pds)
+    pairs = (
+        (STAGED_PLAIN, STAGED_DECORRELATED, "the staged schedule, plain / decorrelated"),
+        (PLAIN_COMBINED, STAGED_PLAIN, "the plain rule, concurrent / staged"),
+        (DECORRELATED_COMBINED, STAGED_DECORRELATED, "the decorrelated rule, concurrent / staged"),
+    )
+    for first, second, title in pairs:
+        print(f"\n{title[0].upper()}{title[1:]}:\n")
+        print_rules(runs, levels, pds, (first, second), tuple(title.split(", ")[1].split(" / ")))
 
 
 def latest(results: Path, suffix: str) -> Path:
@@ -151,12 +188,13 @@ def stays_below(at: Array, errors: Array, level: float) -> int | None:
     return next((int(at[i]) for i in range(len(at)) if below[i:].all()), None)
 
 
-def tuning_runs(results: Path) -> list[Path]:
-    return sorted(path for path in results.iterdir() if "-tune_" in path.name and complete(path))
+def tuning_runs(results: Path, arm: str = "combined") -> list[Path]:
+    """The tuning runs of an arm: "combined" for arm A, "staged" for arm D."""
+    return sorted(path for path in results.iterdir() if f"-tune_{arm}_" in path.name and complete(path))
 
 
-def print_tuning(results: Path) -> None:
-    for run in tuning_runs(results):
+def print_tuning(results: Path, arm: str = "combined") -> None:
+    for run in tuning_runs(results, arm):
         rows = load_rows(run)
         columns = sorted({float(row["rule.learning_rate"]) for row in rows})
         amplitudes = sorted({float(row["rule.exploration.amplitude"]) for row in rows})
@@ -176,12 +214,12 @@ def _tuning_cell(row: dict[str, str]) -> str:
     return f"{1000 * float(row['final_error_m']):.2f}"
 
 
-def print_tuning_cost(results: Path) -> None:
+def print_tuning_cost(results: Path, arm: str = "combined", scales: dict[str, str] = SCALES) -> None:
     print("The tuning's cost, on seed 0: its rounds, trainings and trials, by scale.\n")
     print("| Scale | Rounds | Trainings | Trials |")
     print("| --- | ---: | ---: | ---: |")
-    for scale, title in SCALES.items():
-        runs = [run for run in tuning_runs(results) if f"-tune_combined_{scale}" in run.name]
+    for scale, title in scales.items():
+        runs = [run for run in tuning_runs(results, arm) if f"-tune_{arm}_{scale}" in run.name]
         trainings = [len(load_rows(run)) for run in runs]
         trials = sum(count * load_config(run)["training"]["trials"] for count, run in zip(trainings, runs, strict=True))
         print(f"| {title} | {len(runs)} | {sum(trainings)} | {trials:,} |")
@@ -293,37 +331,42 @@ def _speed_up_cell(combined: Level, fastest: Level, feedback: list[Level]) -> st
 
 
 def print_rules(
-    runs: dict[str, Path], levels: dict[str, dict[float, Level]], pds: dict[tuple[float, float], float]
+    runs: dict[str, Path],
+    levels: dict[str, dict[float, Level]],
+    pds: dict[tuple[float, float], float],
+    pair: tuple[str, str] = (PLAIN_COMBINED, DECORRELATED_COMBINED),
+    names: tuple[str, ...] = ("plain", "decorrelated"),
 ) -> None:
+    first_name, second_name = names
     print(
-        "Seed by seed, 1 to 5, plain / decorrelated: the reach from which each stays closer than each PD, "
-        "and the error at matched budgets. Apart: every seed of one rule before, or closer than, every seed of "
+        f"Seed by seed, 1 to 5, {first_name} / {second_name}: the reach from which each stays closer than each PD, "
+        "and the error at matched budgets. Apart: every seed of one before, or closer than, every seed of "
         "the other; a seed that never passes counts as after every reach.\n"
     )
-    print("| Measure | Plain | Decorrelated | Apart |")
+    print(f"| Measure | {first_name.capitalize()} | {second_name.capitalize()} | Apart |")
     print("| --- | --- | --- | --- |")
     for pd in MARKED_PDS:
         level = pds[pd]
-        plain, decorrelated = levels[PLAIN_COMBINED][level].seeds, levels[DECORRELATED_COMBINED][level].seeds
-        late = [np.inf if seed is None else seed for seed in plain], [np.inf if s is None else s for s in decorrelated]
-        print(f"| reach to {_mm(level)} | {_seeds(plain)} | {_seeds(decorrelated)} | {_apart(*late)} |")
-    courses = {label: load_course(runs[label]) for label in (PLAIN_COMBINED, DECORRELATED_COMBINED)}
+        first, second = levels[pair[0]][level].seeds, levels[pair[1]][level].seeds
+        late = [np.inf if seed is None else seed for seed in first], [np.inf if s is None else s for s in second]
+        print(f"| reach to {_mm(level)} | {_seeds(first)} | {_seeds(second)} | {_apart(*late, names=names)} |")
+    courses = {label: load_course(runs[label]) for label in pair}
     for trials in (100, 1000, 10000):
         errors = [evaluations[:, at == trials][:, 0] for at, evaluations in courses.values()]
         cells = [", ".join(_mm(error, 2).removesuffix(" mm") for error in seeds) + " mm" for seeds in errors]
-        print(f"| error at {trials:,} reaches | {cells[0]} | {cells[1]} | {_apart(*errors)} |")
+        print(f"| error at {trials:,} reaches | {cells[0]} | {cells[1]} | {_apart(*errors, names=names)} |")
 
 
 def _seeds(reaches: list[Reach]) -> str:
     return ", ".join("never" if reach is None else f"{reach:,}" for reach in reaches)
 
 
-def _apart(first: Any, second: Any) -> str:
+def _apart(first: Any, second: Any, names: tuple[str, ...] = ("plain", "decorrelated")) -> str:
     first, second = np.asarray(first, dtype=float), np.asarray(second, dtype=float)
     if np.max(first) < np.min(second):
-        return "plain before or closer"
+        return f"{names[0]} before or closer"
     if np.max(second) < np.min(first):
-        return "decorrelated before or closer"
+        return f"{names[1]} before or closer"
     return "overlap"
 
 

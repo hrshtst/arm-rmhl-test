@@ -1,0 +1,6 @@
+config = "experiments/plain_rule/tune_staged_inertia_round3.toml"
+command = "experiments/learn_combined.py experiments/plain_rule/tune_staged_inertia_round3.toml --workers 24"
+started = 2026-11-12 19:32:50+09:00
+host = "delbosque"
+commit = "5cb5a01e801cb5c071117d06ee7f8fba3102883c"
+uncommitted_changes = false

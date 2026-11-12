@@ -39,6 +39,11 @@ rate to about 0.8, not the decorrelated rule's 50.
   controller held on 1 of 5 seeds, the same count as the decorrelated one in
   report 005.
 
+**Addendum, 2026-11-12.** [Section 6](#6-addendum-2026-11-12-the-staged-schedule-with-the-plain-rule)
+adds the staged schedule with the plain rule, inertia-scaled. It passed 3.1 mm
+after a median of 140 reaches, against arm A's 1,140 and the decorrelated staged
+controller's 120. It ended at 1.2 mm on 4 of 5 seeds.
+
 ## 1. Question
 
 Within RQ1 of the [project README](../../README.md#research-questions), report
@@ -520,3 +525,98 @@ What is not claimed:
    run-away neighbours and lost 1 of 5 seeds.
 4. **Report 006's other next steps** stand: smaller exploration and its cost in
    speed, the tuning's own cost, and several reaches.
+
+## 6. Addendum, 2026-11-12: the staged schedule with the plain rule
+
+Report 006 ran the staged schedule with the decorrelated rule only, and arm A runs
+the plain rule on the concurrent schedule only. To compare both rules on both
+schedules, `plain_rule` adds arm D, inertia-scaled only. Arm D is arm A on the
+staged schedule: the feedforward learns the first 100 reaches alone and is then
+frozen, and the feedback learns from the rest. Its learning rate and amplitude
+were tuned as arm A's were (the addendum of `experiments/plain_rule/README.md`).
+Raw torque was not run. `make_tables.py` prints the tables below from copies of
+the four runs under `results/`.
+
+### 6.1 Tuning
+
+Three rounds on seed 0 ran 53 trainings, 53,000 trials. The closest at 1,000
+trials is a learning rate of 2.5 with 5.7 rad/s^2, 1.62 mm, inside the grids:
+arm A's amplitude, at about 3 times arm A's learning rate of 0.8. Round 1's
+closest, 5 with 4 rad/s^2, lay on its grid's smallest amplitude, and round 2's,
+2.5 with 5.7 rad/s^2, in its corner. At 16 and 32 rad/s^2 every setting ran away,
+and at 8 rad/s^2 every learning rate from 1.25 up. Of round 1's 18 run-aways, 14
+were past 340 mm at trial 120, the first evaluation after the feedback joins. In
+every setting, the first 100 trials are the feedforward alone's, bit for bit, and
+every setting run again in a later round repeated its run bit for bit.
+
+### 6.2 The final runs
+
+Medians over the seeds; a run-away's error counts as it is.
+
+| Learner | Seeds improved | 10 reaches | 30 reaches | 100 reaches | 300 reaches | 1,000 reaches | 3,000 reaches | 10,000 reaches |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| combined, concurrent, plain (arm A) | 4 of 5 | 26.0 mm | 11.1 mm | 5.5 mm | 3.3 mm | 2.6 mm | 2.0 mm | 1.4 mm |
+| combined, concurrent, decorrelated (report 005) | 5 of 5 | 13.1 mm | 5.9 mm | 3.1 mm | 1.7 mm | 1.0 mm | 0.8 mm | 0.7 mm |
+| combined, staged, plain (arm D) | 4 of 5 | 23.2 mm | 8.3 mm | 3.9 mm | 2.2 mm | 1.6 mm | 1.4 mm | 1.2 mm |
+| combined, staged, decorrelated (report 006) | 3 of 5 | 23.2 mm | 8.3 mm | 3.9 mm | 0.8 mm | 0.7 mm | 0.7 mm | 0.6 mm |
+
+The first reach from which the median over the seeds stays closer than the PD, and
+that reach of each seed:
+
+| Learner | PD, 20 rad/s, 0.7 (12.7 mm) | PD, 28 rad/s, 0.7 (6.3 mm) | PD, 40 rad/s, 0.4 (3.1 mm) |
+| --- | ---: | ---: | ---: |
+| combined, concurrent, plain (arm A) | 24 (17 to 36; 1 never) | 72 (35 to 220; 1 never) | 1,140 (1,140 to 3,240; 1 never) |
+| combined, concurrent, decorrelated (report 005) | 11 (9 to 17) | 25 (14 to 41) | 99 (83 to 140) |
+| combined, staged, plain (arm D) | 20 (20; 1 never) | 40 (40; 1 never) | 140 (140 to 160; 1 never) |
+| combined, staged, decorrelated (report 006) | 20 (20; 2 never) | 40 (40; 2 never) | 120 (120; 2 never) |
+
+Arm D improved on 4 of 5 seeds, to 1.60 to 1.70 mm at 1,000 reaches and 1.20 to
+1.22 mm at 10,000. Seed 4 reached 1.21 mm, then ran away late, past 340 mm by
+reach 8,280. As its first 100 reaches are the feedforward alone's, it passed 12.7
+and 6.3 mm after 20 and 40 reaches, as the decorrelated staged controller did.
+
+### 6.3 Rule against rule, and schedule against schedule
+
+Seed by seed, by the criterion of Section 3.5: two arms are apart only if every
+seed of one passes before, or ends closer than, every seed of the other, a seed
+that never passes counting as after every reach.
+
+- **The staged schedule, plain against decorrelated.** The two share their first
+  100 reaches. After the handover, the plain rule passed 3.1 mm after 140 to 160
+  reaches on its 4 seeds that held, and the decorrelated rule after 120 on its 3.
+  The decorrelated rule's 3 ended closer, at 0.52 to 0.59 mm, against 1.20 to
+  1.22 mm. By the criterion they overlap at every level and budget, as each lost
+  seeds: the plain rule seed 4, at reach 8,280; the decorrelated rule seeds 2 and
+  5, within 20 reaches of the handover.
+- **The plain rule, concurrent against staged.** Seed 4 never stays below 3.1 mm
+  on either schedule: it ran away at reach 2 concurrent and at reach 8,280 staged.
+  On the other four, the staged schedule passed 3.1 mm after 140 to 160 reaches,
+  the concurrent one after 1,140 to 3,240, and 6.3 mm after 40 against 35 to 220.
+  At 100 and 1,000 reaches, every staged seed was closer than every concurrent
+  one: 3.87 mm against 4.28 to 7.53 mm and seed 4's run-away, and 1.60 to 1.70 mm
+  against 2.00 to 2.57 mm and the run-away. At 10,000 they overlap: the four that
+  held ended at 1.20 to 1.22 mm staged and 1.23 to 1.63 mm concurrent.
+- **The decorrelated rule, concurrent against staged**, report 006's comparison:
+  the concurrent schedule passed 12.7 mm first on every seed, after 9 to 17
+  reaches against 20. At 6.3 and 3.1 mm they overlap: at 3.1 mm, 83 to 140
+  reaches against 120 on 3 seeds. The staged schedule's 3 seeds ended closer, at 0.52 to 0.59 mm
+  against 0.69 to 0.77 mm, but it lost 2 seeds.
+
+### 6.4 What this changes, and what is not claimed
+
+- **The staged schedule takes away most of the plain rule's slowness.** At
+  3.1 mm, its median of 140 reaches is 8 times fewer than arm A's 1,140, and 20
+  more than the decorrelated staged controller's 120. Its feedback joins when the
+  feedforward has brought the error to 3.9 mm. Its tuned learning rate is about 3
+  times arm A's. Whether the smaller errors at the handover are why it tolerates
+  the larger rate was not measured: `C` was not recorded on these runs.
+- **It does not close the gap in final error.** With the plain rule, the seeds
+  that held ended at 1.2 to 1.6 mm on both schedules. With the decorrelated rule,
+  they ended at 0.5 to 0.8 mm on both.
+- **Run-aways remain.** The plain rule lost 1 of 5 seeds on each schedule. On the
+  staged one it ran away late, at reach 8,280, after holding near 1.2 mm. Whether
+  more seeds would run away after 10,000 reaches is not known.
+- **Not claimed**, as in Section 4: anything about raw torque, which was not run
+  for arm D; a speed that counts the tuning's 53,000 trials on seed 0; and a
+  setting that is robust, as it was tuned on one seed.
+
