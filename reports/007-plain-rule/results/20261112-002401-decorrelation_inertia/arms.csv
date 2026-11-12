@@ -1,0 +1,3 @@
+arm,run,trainings,ridge,max_residual,above_after_1,above_after_10,above_after_30,above_after_100,above_after_300,above_after_1000
+"combined, concurrent (report 005)",20261108-074908-final_concurrent_inertia,5,1.0,1.813846994302297e-11,3.0,2.0,1.0,2.0,1.0,1.0
+"feedback alone, without the constant (report 006)",20261111-020819-final_feedback_no_constant_inertia,5,1.0,5.290401276909261e-11,3.0,3.0,3.0,3.0,2.0,2.0

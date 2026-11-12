@@ -1,0 +1,66 @@
+# Arm B, raw torque: arm A without its feedforward, the feedback alone at arm A's
+# setting, a learning rate of 32 with 0.1 N m, and without the constant. With arm A, it
+# is the matched ablation, as learning_speed's feedback without the constant is of
+# report 005's controller. Seeds 1 to 5, for 10,000 trials.
+
+# arm-esn-ctrl's v2 arm: two links in the horizontal plane, without gravity.
+[initial]
+q = [30.0, 30.0]  # deg
+
+[skeleton]
+base_length = 0.0
+
+[[skeleton.link]]
+length = 0.5
+mass = 0.5
+inertia = 0.0125
+com = [0.25, 0.0]
+limits = [-180.0, 180.0]
+
+[[skeleton.link]]
+length = 0.4
+mass = 0.4
+inertia = 0.0064
+com = [0.2, 0.0]
+limits = [-180.0, 180.0]
+
+[simulator]
+dt = 0.002
+stops = "locked"
+
+# One reach from rest: the hand to (-0.6, 0.4) m by a minimum-jerk move of 1 s, then 1 s of holding.
+[reach]
+target = [-0.6, 0.4]
+move = 1.0
+duration = 2.0
+control_period = 0.01
+
+# The weak PD that the feedback adds to.
+[command]
+omega = 5.0  # rad/s
+damping_ratio = 0.7
+
+[feedback]
+scale = "none"  # the readout's output is the torque
+constant = false  # no bias: the feedback has no constant torque
+
+# burms2015: Gaussian exploration on the output, one update per trial from the
+# reward's difference from the mean of the last 50 rewards.
+[rule]
+preset = "burms2015"
+learning_rate = 32.0
+decorrelation = false  # burms2015 without its decorrelation: the plain node-perturbation rule
+
+[rule.exploration]
+distribution = "gaussian"
+amplitude = 0.1  # N m
+seed = 1  # the sweep replaces it
+
+[training]
+trials = 10000  # arm A's tuning's 1,000 are among the evaluations
+dead_zone = 0.0  # m
+evaluate_every = 20
+evaluate_all_until = 100  # every reach, as the combined runs
+
+[sweep]
+"rule.exploration.seed" = [1, 2, 3, 4, 5]

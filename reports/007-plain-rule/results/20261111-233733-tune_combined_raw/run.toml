@@ -1,0 +1,6 @@
+config = "experiments/plain_rule/tune_combined_raw.toml"
+command = "experiments/learn_combined.py experiments/plain_rule/tune_combined_raw.toml --workers 16"
+started = 2026-11-11 23:37:33+09:00
+host = "delbosque"
+commit = "9ff8614e3bc4a65a44011cdb3eb81f9646696fc9"
+uncommitted_changes = false
